@@ -1,0 +1,16 @@
+[package]
+name = "transent"
+version = "0.1.0"
+description = "transmission terminal ui"
+authors = ["mustafa-shahriar <mostafashahriar598@gmail.com>"]
+license = "MIT"
+edition = "2024"
+
+[dependencies]
+crossterm = "0.28.1"
+ratatui = "0.29.0"
+color-eyre = "0.6.3"
+transmission-rpc = "0.5.0"
+url = "2.5.4"
+tokio = { version = "1.45.1", features = ["full"] }
+tailwind = "0.1.0"
