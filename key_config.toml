@@ -12,3 +12,5 @@
 "k" = "row_up"
 "p" = "pause"
 "r" = "resume"
+"d" = "delete"
+"SHift+d" = "delete_with_data"

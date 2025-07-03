@@ -14,6 +14,8 @@ pub enum Actions {
     RowUp,
     Resume,
     Pause,
+    Delete,
+    DeleteWithData,
 }
 
 impl FromStr for Actions {
@@ -30,6 +32,8 @@ impl FromStr for Actions {
             "row_up" => Ok(Actions::RowUp),
             "pause" => Ok(Actions::Pause),
             "resume" => Ok(Actions::Resume),
+            "delete" => Ok(Actions::Delete),
+            "delete_with_data" => Ok(Actions::DeleteWithData),
             _ => Err(()),
         }
     }

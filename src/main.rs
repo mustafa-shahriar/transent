@@ -2,7 +2,7 @@ use color_eyre::Result;
 use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     widgets::{Paragraph, TableState},
 };
 use transmission_rpc::{
@@ -17,7 +17,9 @@ use tokio::time::{Duration, sleep};
 use url::Url;
 
 use crate::{
-    components::{details, peers_table::render_peers_table, tabs::render_tabs},
+    components::{
+        delete_confirmation::Popup, details, peers_table::render_peers_table, tabs::render_tabs,
+    },
     key_config::load_keymap,
 };
 mod key_config;
@@ -109,6 +111,8 @@ pub struct App {
     running: bool,
     torrents: Arc<Mutex<Vec<Torrent>>>,
     selected_torrent_id: Option<String>,
+    delete_confirmation: bool,
+    with_data: bool,
     client: Arc<Mutex<transmission_rpc::TransClient>>,
     pub table_state: TableState,
     pub peer_table_state: TableState,
@@ -131,6 +135,8 @@ impl App {
         App {
             running: true,
             torrents,
+            delete_confirmation: false,
+            with_data: false,
             selected_torrent_id: None,
             client,
             table_state: TableState::default(),
@@ -223,8 +229,12 @@ impl App {
             .and_then(|n| filtered_torrents.get(n))
             .cloned();
 
+        let mut name = "".to_string();
         match selected_torrent.as_ref() {
-            Some(torrent) => self.selected_torrent_id = torrent.hash_string.clone(),
+            Some(torrent) => {
+                self.selected_torrent_id = torrent.hash_string.clone();
+                name = selected_torrent.as_ref().unwrap().name.clone().unwrap();
+            }
             None => self.selected_torrent_id = None,
         }
 
@@ -253,6 +263,21 @@ impl App {
                 // Use self.file_table_state for selection
             }
         }
+        if self.delete_confirmation {
+            let popup_area = Rect {
+                x: frame.area().width / 4,
+                y: frame.area().height / 3,
+                width: frame.area().width / 2,
+                height: frame.area().height / 3,
+            };
+            let content = if self.with_data {
+                format!("Delete \"{}\"?\n\nwith data\n\n\n[Y]es    [N]o", name)
+            } else {
+                format!("Delete \"{}\"?\n\nwithout data\n\n\n[Y]es    [N]o", name)
+            };
+            let popup = Popup::default().content(content).title("Delete");
+            frame.render_widget(popup, popup_area);
+        }
     }
 
     async fn handle_crossterm_events(&mut self) -> Result<()> {
@@ -270,8 +295,25 @@ impl App {
     async fn on_key_event(&mut self, key: KeyEvent) {
         let torrents_len = self.visible_torrents_len;
         let key_event_str = keyevent_to_string(&key);
+
+        if self.delete_confirmation {
+            match key_event_str.as_ref() {
+                "y" | "Y" => {
+                    let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
+                    let mut client = self.client.lock().await;
+                    let _ = client.torrent_remove(ids, self.with_data).await;
+                    self.delete_confirmation = false;
+                }
+                "n" | "N" => {
+                    self.delete_confirmation = false;
+                }
+                _ => {}
+            }
+            return;
+        }
+
         let action = self.key_map.get(&key_event_str);
-        if !action.is_some() {
+        if action.is_none() {
             return;
         }
 
@@ -318,7 +360,6 @@ impl App {
                     TopTab::Seeding => TopTab::All,
                 };
             }
-
             // Bottom pane navigation (example for peers)
             Actions::RowDown
                 if self.focused_pane == Pane::Bottom && self.bottom_tab == BottomTab::Peers =>
@@ -354,6 +395,14 @@ impl App {
                 let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
                 let mut client = self.client.lock().await;
                 let _ = client.torrent_action(TorrentAction::Stop, ids).await;
+            }
+            Actions::Delete if self.selected_torrent_id.is_some() => {
+                self.delete_confirmation = true;
+                self.with_data = false;
+            }
+            Actions::DeleteWithData if self.selected_torrent_id.is_some() => {
+                self.delete_confirmation = true;
+                self.with_data = true;
             }
             _ => {}
         }

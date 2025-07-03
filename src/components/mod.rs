@@ -1,3 +1,4 @@
+pub mod delete_confirmation;
 pub mod details;
 pub mod peers_table;
 pub mod tabs;
