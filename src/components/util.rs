@@ -1,0 +1,66 @@
+use std::time::Duration;
+use transmission_rpc::types::TorrentStatus;
+
+pub fn readabl_eta(eta: i64) -> String {
+    if eta < 0 {
+        return "∞".to_string();
+    }
+
+    let duration = Duration::from_secs(eta as u64);
+    let secs = duration.as_secs();
+    let hours = secs / 3600;
+    let minutes = (secs % 3600) / 60;
+    let seconds = secs % 60;
+
+    if hours >= 1 {
+        format!("{}h{}m", hours, minutes)
+    } else if minutes >= 1 {
+        format!("{}m{}s", minutes, seconds)
+    } else {
+        format!("{}s", seconds)
+    }
+}
+pub fn round_to_2_decimals(value: f64) -> f64 {
+    (value * 100.0).round() / 100.0
+}
+
+pub fn readable_size(size: i64) -> String {
+    let size = size as f64;
+    let kb = 1024.0;
+    let mb = kb * 1024.0;
+    let gb = mb * 1024.0;
+    if size >= gb {
+        return round_to_2_decimals(size / gb).to_string() + " GB";
+    } else if size >= mb {
+        return round_to_2_decimals(size / mb).to_string() + " MB";
+    }
+    return round_to_2_decimals(size).to_string() + " KB";
+}
+
+pub fn status_to_string(status: TorrentStatus) -> String {
+    let s = match status {
+        TorrentStatus::Stopped => "Stopped",
+        TorrentStatus::QueuedToVerify => "QueuedToVerify",
+        TorrentStatus::Verifying => "Verifying",
+        TorrentStatus::QueuedToDownload => "QueuedToDownload",
+        TorrentStatus::Downloading => "Downloading",
+        TorrentStatus::QueuedToSeed => "QueuedToSeed",
+        TorrentStatus::Seeding => "Seeding",
+    };
+
+    return s.to_string();
+}
+
+pub fn readble_speed(kb: i64) -> String {
+    let kilo_byte = kb as f64;
+    let mega_byte = 1024.0 * 1024.0;
+    let giga_byte = mega_byte * 1024.0;
+
+    if kilo_byte >= giga_byte {
+        return round_to_2_decimals(kilo_byte / giga_byte).to_string() + " GB/s";
+    } else if kilo_byte >= mega_byte {
+        return round_to_2_decimals(kilo_byte / mega_byte).to_string() + " MB/s";
+    }
+
+    return round_to_2_decimals(kilo_byte).to_string() + " KB/s";
+}

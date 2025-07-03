@@ -1,0 +1,12 @@
+[keybindings]
+"q" = "quit"
+"Esc" = "quit"
+"Ctrl+c" = "quit"
+"Ctrl+j" = "focus_bottom"
+"Ctrl+k" = "focus_top"
+"Ctrl+l" = "focus_bottom"
+"Ctrl+h" = "focus_top"
+"h" = "tab_left"
+"l" = "tab_right"
+"j" = "row_down"
+"k" = "row_up"

@@ -1,16 +1,24 @@
 use ratatui::layout::Constraint;
-use ratatui::style::{Color, Style, Stylize};
+use ratatui::style::{Style, Stylize};
 use ratatui::widgets::{Table, TableState};
 use ratatui::{Frame, layout::Rect, widgets::Row};
 use transmission_rpc::types::Torrent;
-use transmission_rpc::types::TorrentStatus;
 
-pub struct TorrentTable {
-    pub torrents: Vec<Torrent>,
+use crate::components::util::{readabl_eta, readble_speed, status_to_string};
+use crate::theme::Theme;
+
+pub struct TorrentTable<'a> {
+    pub torrents: &'a [Torrent],
 }
 
-impl TorrentTable {
-    pub fn render(&self, frame: &mut Frame, area: Rect, table_state: &mut TableState) {
+impl<'a> TorrentTable<'a> {
+    pub fn render(
+        &self,
+        frame: &mut Frame,
+        area: Rect,
+        table_state: &mut TableState,
+        theme: &Theme,
+    ) {
         let header = Row::new([
             "Name",
             "Status",
@@ -21,23 +29,25 @@ impl TorrentTable {
         ])
         .style(Style::new().bold());
 
-        let mut rows: Vec<Row> = vec![];
-        for torrent in self.torrents.iter() {
-            let status = status_to_string(torrent.status.unwrap());
-            let porgress = torrent.percent_done.unwrap_or(0.0) * 100.0;
-            let down = torrent.rate_download.unwrap_or(0).to_string();
-            let up = torrent.rate_upload.unwrap_or(0).to_string();
-            let eta = torrent.eta.unwrap_or(0).to_string();
-            let row = [
-                torrent.name.clone().unwrap(),
-                status.to_string(),
-                porgress.to_string() + "%",
-                down,
-                up,
-                eta,
-            ];
-            rows.push(Row::new(row));
-        }
+        let rows: Vec<Row> = self
+            .torrents
+            .iter()
+            .map(|torrent| {
+                let status = status_to_string(torrent.status.unwrap());
+                let progress = torrent.percent_done.unwrap_or(0.0) * 100.0;
+                let down = torrent.rate_download.unwrap_or(0);
+                let up = torrent.rate_upload.unwrap_or(0);
+                let eta = torrent.eta.unwrap_or(0);
+                Row::new([
+                    torrent.name.clone().unwrap_or_default(),
+                    status,
+                    format!("{:.1}%", progress),
+                    readble_speed(down),
+                    readble_speed(up),
+                    readabl_eta(eta),
+                ])
+            })
+            .collect();
 
         let widths = [
             Constraint::Percentage(50),
@@ -51,23 +61,15 @@ impl TorrentTable {
         let table = Table::new(rows, widths)
             .header(header)
             .column_spacing(2)
-            .style(Color::White)
-            .row_highlight_style(Style::new().on_black().cyan());
+            .style(Theme::color(&theme.general.foreground))
+            .row_highlight_style(
+                Style::default()
+                    .fg(Theme::color(&theme.table.row_highlight_fg))
+                    .bg(Theme::color(&theme.table.row_highlight_bg))
+                    .add_modifier(ratatui::style::Modifier::BOLD),
+            );
 
         frame.render_stateful_widget(table, area, table_state);
     }
 }
 
-fn status_to_string(status: TorrentStatus) -> String {
-    let s = match status {
-        TorrentStatus::Stopped => "Stopped",
-        TorrentStatus::QueuedToVerify => "QueuedToVerify",
-        TorrentStatus::Verifying => "Verifying",
-        TorrentStatus::QueuedToDownload => "QueuedToDownload",
-        TorrentStatus::Downloading => "Downloading",
-        TorrentStatus::QueuedToSeed => "QueuedToSeed",
-        TorrentStatus::Seeding => "Seeding",
-    };
-
-    return s.to_string();
-}
