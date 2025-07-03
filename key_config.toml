@@ -10,3 +10,5 @@
 "l" = "tab_right"
 "j" = "row_down"
 "k" = "row_up"
+"p" = "pause"
+"r" = "resume"

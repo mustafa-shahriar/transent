@@ -12,6 +12,8 @@ pub enum Actions {
     TabRight,
     RowDown,
     RowUp,
+    Resume,
+    Pause,
 }
 
 impl FromStr for Actions {
@@ -26,6 +28,8 @@ impl FromStr for Actions {
             "tab_right" => Ok(Actions::TabRight),
             "row_down" => Ok(Actions::RowDown),
             "row_up" => Ok(Actions::RowUp),
+            "pause" => Ok(Actions::Pause),
+            "resume" => Ok(Actions::Resume),
             _ => Err(()),
         }
     }

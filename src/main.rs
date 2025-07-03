@@ -7,7 +7,7 @@ use ratatui::{
 };
 use transmission_rpc::{
     TransClient,
-    types::{Torrent, TorrentStatus},
+    types::{Id, Torrent, TorrentAction, TorrentStatus},
 };
 mod components;
 use components::torrent_table::TorrentTable;
@@ -75,7 +75,7 @@ async fn tokio_main() -> color_eyre::Result<()> {
         }
     });
 
-    let app = App::new(torrents_arc, torrent_len);
+    let app = App::new(torrents_arc, client, torrent_len);
 
     let terminal = ratatui::init();
     let result = app.run(terminal).await;
@@ -108,6 +108,8 @@ enum BottomTab {
 pub struct App {
     running: bool,
     torrents: Arc<Mutex<Vec<Torrent>>>,
+    selected_torrent_id: Option<String>,
+    client: Arc<Mutex<transmission_rpc::TransClient>>,
     pub table_state: TableState,
     pub peer_table_state: TableState,
     pub file_table_state: TableState,
@@ -120,11 +122,17 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(torrents: Arc<Mutex<Vec<Torrent>>>, torrents_len: usize) -> Self {
+    pub fn new(
+        torrents: Arc<Mutex<Vec<Torrent>>>,
+        client: Arc<Mutex<TransClient>>,
+        torrents_len: usize,
+    ) -> Self {
         let key_map = load_keymap("key_config.toml");
         App {
             running: true,
             torrents,
+            selected_torrent_id: None,
+            client,
             table_state: TableState::default(),
             peer_table_state: TableState::default(),
             file_table_state: TableState::default(),
@@ -214,6 +222,12 @@ impl App {
             .selected()
             .and_then(|n| filtered_torrents.get(n))
             .cloned();
+
+        match selected_torrent.as_ref() {
+            Some(torrent) => self.selected_torrent_id = torrent.hash_string.clone(),
+            None => self.selected_torrent_id = None,
+        }
+
         match self.bottom_tab {
             BottomTab::Details => {
                 let d = details::Details {
@@ -330,6 +344,16 @@ impl App {
                     BottomTab::Peers => BottomTab::Files,
                     BottomTab::Files => BottomTab::Details,
                 };
+            }
+            Actions::Resume if self.selected_torrent_id.is_some() => {
+                let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
+                let mut client = self.client.lock().await;
+                let _ = client.torrent_action(TorrentAction::Start, ids).await;
+            }
+            Actions::Pause if self.selected_torrent_id.is_some() => {
+                let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
+                let mut client = self.client.lock().await;
+                let _ = client.torrent_action(TorrentAction::Stop, ids).await;
             }
             _ => {}
         }
