@@ -3,8 +3,7 @@ use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Direction, Layout},
-    prelude::Rect,
-    widgets::{Block, Borders, TableState, Tabs},
+    widgets::{Paragraph, TableState},
 };
 use transmission_rpc::{
     TransClient,
@@ -17,7 +16,10 @@ use tokio::sync::Mutex;
 use tokio::time::{Duration, sleep};
 use url::Url;
 
-use crate::{components::details, key_config::load_keymap};
+use crate::{
+    components::{details, peers_table::render_peers_table, tabs::render_tabs},
+    key_config::load_keymap,
+};
 mod key_config;
 mod theme;
 use key_config::{Actions, keyevent_to_string};
@@ -50,6 +52,7 @@ async fn tokio_main() -> color_eyre::Result<()> {
         .map_err(|e| color_eyre::eyre::eyre!(e))?
         .arguments
         .torrents;
+    let torrent_len = torrents.len();
 
     let torrents_arc = Arc::new(Mutex::new(torrents));
 
@@ -72,7 +75,7 @@ async fn tokio_main() -> color_eyre::Result<()> {
         }
     });
 
-    let app = App::new(torrents_arc);
+    let app = App::new(torrents_arc, torrent_len);
 
     let terminal = ratatui::init();
     let result = app.run(terminal).await;
@@ -113,10 +116,11 @@ pub struct App {
     bottom_tab: BottomTab,
     pub theme: Theme,
     pub key_map: HashMap<String, Actions>,
+    visible_torrents_len: usize,
 }
 
 impl App {
-    pub fn new(torrents: Arc<Mutex<Vec<Torrent>>>) -> Self {
+    pub fn new(torrents: Arc<Mutex<Vec<Torrent>>>, torrents_len: usize) -> Self {
         let key_map = load_keymap("key_config.toml");
         App {
             running: true,
@@ -129,6 +133,7 @@ impl App {
             bottom_tab: BottomTab::Details,
             theme: load_theme(),
             key_map: key_map,
+            visible_torrents_len: torrents_len,
         }
     }
 
@@ -184,6 +189,7 @@ impl App {
                 .cloned()
                 .collect(),
         };
+        self.visible_torrents_len = filtered_torrents.len();
 
         // Top pane: torrents table
         let table = TorrentTable {
@@ -203,22 +209,31 @@ impl App {
         );
 
         // Bottom pane: details/peers/files
+        let selected_torrent = self
+            .table_state
+            .selected()
+            .and_then(|n| filtered_torrents.get(n))
+            .cloned();
         match self.bottom_tab {
             BottomTab::Details => {
-                let selected_torrent = self
-                    .table_state
-                    .selected()
-                    .and_then(|n| filtered_torrents.get(n))
-                    .cloned();
                 let d = details::Details {
                     torrent: selected_torrent,
                 };
                 d.render(frame, chunks[3]);
             }
-            BottomTab::Peers => {
-                // TODO: Render peers table for selected torrent
-                // Use self.peer_table_state for selection
-            }
+            BottomTab::Peers => match selected_torrent {
+                Some(torrent) => render_peers_table(
+                    torrent,
+                    frame,
+                    chunks[3],
+                    &mut self.peer_table_state,
+                    &self.theme,
+                ),
+                None => {
+                    let p = Paragraph::new("Select A torrent to view Peers List");
+                    frame.render_widget(p, chunks[3]);
+                }
+            },
             BottomTab::Files => {
                 // TODO: Render files table for selected torrent
                 // Use self.file_table_state for selection
@@ -239,7 +254,7 @@ impl App {
     }
 
     async fn on_key_event(&mut self, key: KeyEvent) {
-        let torrents_len = self.torrents.lock().await.len();
+        let torrents_len = self.visible_torrents_len;
         let key_event_str = keyevent_to_string(&key);
         let action = self.key_map.get(&key_event_str);
         if !action.is_some() {
@@ -323,33 +338,4 @@ impl App {
     fn quit(&mut self) {
         self.running = false;
     }
-}
-
-fn render_tabs<'a, T: ToString>(
-    titles: &[T],
-    selected: usize,
-    area: Rect,
-    frame: &mut Frame,
-    focused: bool,
-    theme: &Theme,
-) {
-    use ratatui::style::{Modifier, Style};
-    let titles: Vec<_> = titles.iter().map(|t| t.to_string()).collect();
-    let base_style = Style::default()
-        .fg(Theme::color(&theme.tabs.inactive_fg))
-        .bg(Theme::color(&theme.tabs.inactive_bg));
-    let highlight_style = if focused {
-        Style::default()
-            .fg(Theme::color(&theme.tabs.active_fg))
-            .bg(Theme::color(&theme.tabs.active_bg))
-            .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
-    } else {
-        base_style
-    };
-    let tabs = Tabs::new(titles)
-        .select(selected)
-        .block(Block::default().borders(Borders::ALL))
-        .style(base_style)
-        .highlight_style(highlight_style);
-    frame.render_widget(tabs, area);
 }
