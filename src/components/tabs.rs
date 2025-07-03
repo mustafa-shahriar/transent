@@ -24,7 +24,10 @@ pub fn render_tabs<'a, T: ToString>(
             .bg(Theme::color(&theme.tabs.active_bg))
             .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
     } else {
-        base_style
+        Style::default()
+            .fg(Theme::color(&theme.tabs.inactive_fg))
+            .bg(Theme::color(&theme.tabs.inactive_bg))
+            .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
     };
     let tabs = Tabs::new(titles)
         .select(selected)
