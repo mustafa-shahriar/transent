@@ -25,8 +25,8 @@ pub fn render_peers_table(
             Row::new([
                 peer.address.to_string().clone(),
                 peer.client_name.clone(),
-                readble_speed((peer.rate_to_client / (8 * 1024)) as i64),
-                readble_speed((peer.rate_to_peer / (8 * 1024)) as i64),
+                readble_speed((peer.rate_to_client) as i64),
+                readble_speed((peer.rate_to_peer) as i64),
             ])
         })
         .collect();
