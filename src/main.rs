@@ -11,14 +11,15 @@ use transmission_rpc::{
 };
 mod components;
 use components::torrent_table::TorrentTable;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, path::Path, sync::Arc};
 use tokio::sync::Mutex;
 use tokio::time::{Duration, sleep};
 use url::Url;
 
 use crate::{
     components::{
-        delete_confirmation::Popup, details, peers_table::render_peers_table, tabs::render_tabs,
+        delete_confirmation::Popup, details, file_picker::FilePicker,
+        peers_table::render_peers_table, tabs::render_tabs, util::get_entries,
     },
     key_config::load_keymap,
 };
@@ -123,6 +124,9 @@ pub struct App {
     pub theme: Theme,
     pub key_map: HashMap<String, Actions>,
     visible_torrents_len: usize,
+    show_file_picker: bool,
+    file_picker: FilePicker,
+    file_picker_state: TableState,
 }
 
 impl App {
@@ -148,6 +152,9 @@ impl App {
             theme: load_theme(),
             key_map: key_map,
             visible_torrents_len: torrents_len,
+            show_file_picker: false,
+            file_picker: FilePicker::new("~/".to_string()),
+            file_picker_state: TableState::default(),
         }
     }
 
@@ -165,6 +172,7 @@ impl App {
     fn render(&mut self, frame: &mut Frame, torrents: &[Torrent]) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
+            .margin(1)
             .constraints(vec![
                 Constraint::Length(3),      // Top tabs
                 Constraint::Percentage(47), // Top pane
@@ -268,15 +276,27 @@ impl App {
                 x: frame.area().width / 4,
                 y: frame.area().height / 3,
                 width: frame.area().width / 2,
-                height: frame.area().height / 3,
+                height: frame.area().height / 2,
             };
-            let content = if self.with_data {
-                format!("Delete \"{}\"?\n\nwith data\n\n\n[Y]es    [N]o", name)
+            let content = format!("{}\n\n\n\n[Y]es    [N]o", name);
+            let title = if self.with_data {
+                "Delete icluding data"
             } else {
-                format!("Delete \"{}\"?\n\nwithout data\n\n\n[Y]es    [N]o", name)
+                "Delete excluding data"
             };
-            let popup = Popup::default().content(content).title("Delete");
+            let popup = Popup::default().content(content).title(title);
             frame.render_widget(popup, popup_area);
+        }
+
+        if self.show_file_picker {
+            let popup_area = Rect {
+                x: frame.area().width / 4,
+                y: frame.area().height / 3,
+                width: frame.area().width / 2,
+                height: frame.area().height / 2,
+            };
+            self.file_picker
+                .render(frame, popup_area, &mut self.file_picker_state, &self.theme);
         }
     }
 
@@ -314,6 +334,46 @@ impl App {
 
         let action = self.key_map.get(&key_event_str);
         if action.is_none() {
+            return;
+        }
+
+        if self.show_file_picker {
+            match *action.unwrap() {
+                Actions::Quit => {
+                    self.show_file_picker = false;
+                    self.file_picker.path = "~".to_string();
+                }
+                Actions::RowDown => {
+                    self.file_picker_state.select_next();
+                }
+                Actions::RowUp => {
+                    self.file_picker_state.select_previous();
+                }
+                Actions::TabRight => match self.file_picker_state.selected() {
+                    Some(n) => {
+                        let selected_path = self.file_picker.entries[n]
+                            .path()
+                            .canonicalize()
+                            .unwrap()
+                            .display()
+                            .to_string();
+                        self.file_picker.path = selected_path;
+                        self.file_picker.entries = get_entries(self.file_picker.path.clone());
+                    }
+                    None => {}
+                },
+                Actions::TabLeft => {
+                    let path = Path::new(&self.file_picker.path);
+                    match path.parent() {
+                        Some(parent) => {
+                            self.file_picker.path = parent.display().to_string();
+                            self.file_picker.entries = get_entries(self.file_picker.path.clone());
+                        }
+                        None => {}
+                    }
+                }
+                _ => {}
+            }
             return;
         }
 
@@ -403,6 +463,9 @@ impl App {
             Actions::DeleteWithData if self.selected_torrent_id.is_some() => {
                 self.delete_confirmation = true;
                 self.with_data = true;
+            }
+            Actions::AddTorrent => {
+                self.show_file_picker = true;
             }
             _ => {}
         }

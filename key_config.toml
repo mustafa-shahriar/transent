@@ -14,3 +14,4 @@
 "r" = "resume"
 "d" = "delete"
 "SHift+d" = "delete_with_data"
+"a" = "add_torrent"

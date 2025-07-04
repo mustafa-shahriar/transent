@@ -4,7 +4,7 @@ use ratatui::{
     layout::{Alignment, Rect},
     style::Style,
     text::{Line, Text},
-    widgets::{Block, Borders, Clear, Paragraph, Widget, Wrap},
+    widgets::{Block, Borders, Clear, Padding, Paragraph, Widget, Wrap},
 };
 
 #[derive(Debug, Default, Setters)]
@@ -22,6 +22,8 @@ impl Widget for Popup<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         Clear.render(area, buf);
         let block = Block::new()
+            .padding(Padding::new(2, 2, 2, 2))
+            .title_alignment(Alignment::Center)
             .title(self.title)
             .title_style(self.title_style)
             .borders(Borders::ALL)

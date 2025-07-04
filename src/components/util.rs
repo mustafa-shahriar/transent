@@ -1,5 +1,31 @@
-use std::time::Duration;
+use home::home_dir;
+use std::{
+    fs::{DirEntry, read_dir},
+    path::{Path, PathBuf},
+    time::Duration,
+};
 use transmission_rpc::types::TorrentStatus;
+
+pub fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {
+    let p = path.as_ref();
+    if let Some(str_path) = p.to_str() {
+        if let Some(home) = home_dir() {
+            if str_path.starts_with("~/") {
+                return home.join(&str_path[2..]);
+            }
+        }
+    }
+    p.to_path_buf()
+}
+
+pub fn get_entries(path: String) -> Vec<DirEntry> {
+    let real_path = expand_path(path);
+    let entries = read_dir(&real_path);
+    match entries {
+        Ok(entries) => entries.filter_map(|entry| entry.ok()).collect(),
+        Err(_) => vec![],
+    }
+}
 
 pub fn readabl_eta(eta: i64) -> String {
     if eta < 0 {

@@ -72,4 +72,3 @@ impl<'a> TorrentTable<'a> {
         frame.render_stateful_widget(table, area, table_state);
     }
 }
-
