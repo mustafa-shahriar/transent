@@ -351,6 +351,7 @@ impl App {
                 }
                 Actions::TabRight => match self.file_picker_state.selected() {
                     Some(n) => {
+                        self.file_picker.last_index = n;
                         let selected_path = self.file_picker.entries[n]
                             .path()
                             .canonicalize()
@@ -358,7 +359,13 @@ impl App {
                             .display()
                             .to_string();
                         self.file_picker.path = selected_path;
-                        self.file_picker.entries = get_entries(self.file_picker.path.clone());
+                        let entries = get_entries(self.file_picker.path.clone());
+                        if entries.len() > 1 {
+                            self.file_picker_state.select(Some(1));
+                        } else {
+                            self.file_picker_state.select(None);
+                        }
+                        self.file_picker.entries = entries;
                     }
                     None => {}
                 },
@@ -368,6 +375,8 @@ impl App {
                         Some(parent) => {
                             self.file_picker.path = parent.display().to_string();
                             self.file_picker.entries = get_entries(self.file_picker.path.clone());
+                            self.file_picker_state
+                                .select(Some(self.file_picker.last_index));
                         }
                         None => {}
                     }

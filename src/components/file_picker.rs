@@ -9,6 +9,7 @@ use std::fs::DirEntry;
 pub struct FilePicker {
     pub path: String,
     pub entries: Vec<DirEntry>,
+    pub last_index: usize,
 }
 
 impl FilePicker {
@@ -17,6 +18,7 @@ impl FilePicker {
         FilePicker {
             path: real_path.display().to_string(),
             entries: get_entries(path.clone()),
+            last_index: 1,
         }
     }
 
