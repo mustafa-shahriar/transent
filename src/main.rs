@@ -7,7 +7,7 @@ use ratatui::{
 };
 use transmission_rpc::{
     TransClient,
-    types::{Id, Torrent, TorrentAction, TorrentStatus},
+    types::{Id, Torrent, TorrentAction, TorrentAddArgs, TorrentStatus},
 };
 mod components;
 use components::torrent_table::TorrentTable;
@@ -341,7 +341,6 @@ impl App {
             match *action.unwrap() {
                 Actions::Quit => {
                     self.show_file_picker = false;
-                    self.file_picker.path = "~".to_string();
                 }
                 Actions::RowDown => {
                     self.file_picker_state.select_next();
@@ -359,11 +358,21 @@ impl App {
                             .display()
                             .to_string();
                         self.file_picker.path = selected_path;
+                        if self.file_picker.path.ends_with(".torrent") {
+                            let mut t = TorrentAddArgs::default();
+                            t.files_unwanted = None;
+                            t.filename = Some(self.file_picker.path.clone());
+                            let r = self.client.lock().await.torrent_add(t).await;
+                            match r {
+                                Ok(_) => self.show_file_picker = false,
+                                Err(_) => {}
+                            }
+                            return;
+                        };
                         let entries = get_entries(self.file_picker.path.clone());
-                        if entries.len() > 1 {
-                            self.file_picker_state.select(Some(1));
-                        } else {
-                            self.file_picker_state.select(None);
+                        match entries.len() {
+                            0 => self.file_picker_state.select(None),
+                            _ => self.file_picker_state.select(Some(1)),
                         }
                         self.file_picker.entries = entries;
                     }
