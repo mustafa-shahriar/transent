@@ -77,16 +77,19 @@ pub fn status_to_string(status: TorrentStatus) -> String {
     return s.to_string();
 }
 
-pub fn readble_speed(kb: i64) -> String {
-    let kilo_byte = kb as f64;
-    let mega_byte = 1024.0 * 1024.0;
+pub fn readble_speed(byte: i64) -> String {
+    let byte = byte as f64;
+    let kilo_byte = 1024.0;
+    let mega_byte = kilo_byte * 1024.0;
     let giga_byte = mega_byte * 1024.0;
 
-    if kilo_byte >= giga_byte {
-        return round_to_2_decimals(kilo_byte / giga_byte).to_string() + " GB/s";
-    } else if kilo_byte >= mega_byte {
-        return round_to_2_decimals(kilo_byte / mega_byte).to_string() + " MB/s";
+    if byte >= giga_byte {
+        return round_to_2_decimals(byte / giga_byte).to_string() + " GB/s";
+    } else if byte >= mega_byte {
+        return round_to_2_decimals(byte / mega_byte).to_string() + " MB/s";
+    } else if byte >= kilo_byte {
+        return round_to_2_decimals(byte / kilo_byte).to_string() + " KB/s";
     }
 
-    return round_to_2_decimals(kilo_byte).to_string() + " KB/s";
+    return round_to_2_decimals(byte).to_string() + " B/s";
 }
