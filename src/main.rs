@@ -442,12 +442,12 @@ impl App {
             Actions::RowDown
                 if self.focused_pane == Pane::Bottom && self.bottom_tab == BottomTab::Peers =>
             {
-                // TODO: logic for self.peer_table_state
+                self.peer_table_state.select_next();
             }
             Actions::RowUp
                 if self.focused_pane == Pane::Bottom && self.bottom_tab == BottomTab::Peers =>
             {
-                // TODO: logic for self.peer_table_state
+                self.peer_table_state.select_previous();
             }
             // Bottom pane tab switching
             Actions::TabLeft if self.focused_pane == Pane::Bottom => {
