@@ -350,7 +350,7 @@ impl App {
                 }
                 Actions::TabRight => match self.file_picker_state.selected() {
                     Some(n) => {
-                        self.file_picker.last_index = n;
+                        self.file_picker.previos_indexes.push(n);
                         let selected_path = self.file_picker.entries[n]
                             .path()
                             .canonicalize()
@@ -385,7 +385,7 @@ impl App {
                             self.file_picker.path = parent.display().to_string();
                             self.file_picker.entries = get_entries(self.file_picker.path.clone());
                             self.file_picker_state
-                                .select(Some(self.file_picker.last_index));
+                                .select(self.file_picker.previos_indexes.pop());
                         }
                         None => {}
                     }
