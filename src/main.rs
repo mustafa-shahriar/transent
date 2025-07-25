@@ -3,7 +3,7 @@ use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Paragraph, TableState},
+    widgets::{Paragraph, ScrollbarState, TableState},
 };
 use transmission_rpc::{
     TransClient,
@@ -11,14 +11,14 @@ use transmission_rpc::{
 };
 mod components;
 use components::torrent_table::TorrentTable;
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{cmp::min, collections::HashMap, path::Path, sync::Arc};
 use tokio::sync::Mutex;
 use tokio::time::{Duration, sleep};
 use url::Url;
 
 use crate::{
     components::{
-        delete_confirmation::Popup, details, file_picker::FilePicker,
+        delete_confirmation::Popup, details, file_picker::FilePicker, files,
         peers_table::render_peers_table, tabs::render_tabs, util::get_entries,
     },
     key_config::load_keymap,
@@ -127,6 +127,8 @@ pub struct App {
     show_file_picker: bool,
     file_picker: FilePicker,
     file_picker_state: TableState,
+    files_state: TableState,
+    scrollbar_state: ScrollbarState,
 }
 
 impl App {
@@ -155,6 +157,8 @@ impl App {
             show_file_picker: false,
             file_picker: FilePicker::new("~/".to_string()),
             file_picker_state: TableState::default(),
+            scrollbar_state: ScrollbarState::default(),
+            files_state: TableState::default(),
         }
     }
 
@@ -212,12 +216,26 @@ impl App {
                 .collect(),
         };
         self.visible_torrents_len = filtered_torrents.len();
+        self.scrollbar_state = self
+            .scrollbar_state
+            .content_length(self.visible_torrents_len)
+            .position(self.table_state.selected().unwrap_or(0))
+            .viewport_content_length(min(
+                chunks[1].height.saturating_sub(1) as usize,
+                self.visible_torrents_len,
+            ));
 
         // Top pane: torrents table
         let table = TorrentTable {
             torrents: &filtered_torrents,
         };
-        table.render(frame, chunks[1], &mut self.table_state, &self.theme);
+        table.render(
+            frame,
+            chunks[1],
+            &mut self.table_state,
+            &mut self.scrollbar_state,
+            &self.theme,
+        );
 
         // Bottom tabs
         let bottom_tab_titles = ["Details", "Peers", "Files"];
@@ -266,11 +284,21 @@ impl App {
                     frame.render_widget(p, chunks[3]);
                 }
             },
-            BottomTab::Files => {
-                // TODO: Render files table for selected torrent
-                // Use self.file_table_state for selection
-            }
+            BottomTab::Files => match selected_torrent {
+                Some(torrent) => files::render_files_tab(
+                    torrent,
+                    frame,
+                    chunks[3],
+                    &mut self.files_state,
+                    &self.theme,
+                ),
+                None => {
+                    let p = Paragraph::new("Select A torrent to view Files");
+                    frame.render_widget(p, chunks[3]);
+                }
+            },
         }
+
         if self.delete_confirmation {
             let popup_area = Rect {
                 x: frame.area().width / 4,
@@ -448,6 +476,17 @@ impl App {
                 if self.focused_pane == Pane::Bottom && self.bottom_tab == BottomTab::Peers =>
             {
                 self.peer_table_state.select_previous();
+            }
+            // Bottom pane navigation (for files)
+            Actions::RowDown
+                if self.focused_pane == Pane::Bottom && self.bottom_tab == BottomTab::Files =>
+            {
+                self.files_state.select_next();
+            }
+            Actions::RowUp
+                if self.focused_pane == Pane::Bottom && self.bottom_tab == BottomTab::Files =>
+            {
+                self.files_state.select_previous();
             }
             // Bottom pane tab switching
             Actions::TabLeft if self.focused_pane == Pane::Bottom => {

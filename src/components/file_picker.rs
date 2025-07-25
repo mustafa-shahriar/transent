@@ -69,11 +69,8 @@ pub fn icon_for(entry: &DirEntry) -> &'static str {
 
     if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
         match ext.to_lowercase().as_str() {
-            "jpg" | "jpeg" | "png" | "gif" | "bmp" | "webp" => "🖼️", // Image
-            "mp4" | "mkv" | "avi" | "mov" | "webm" => "🎞️",          // Video
-            "pdf" => "📄",                                           // PDF
-            "torrent" => "🌊",                                       // Torrent
-            _ => "📄",                                               // Default for other files
+            "torrent" => "🌊", // Torrent
+            _ => "📄",         // Default for other files
         }
     } else {
         "📄"

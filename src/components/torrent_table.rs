@@ -1,6 +1,6 @@
-use ratatui::layout::Constraint;
+use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Style, Stylize};
-use ratatui::widgets::{Table, TableState};
+use ratatui::widgets::{Scrollbar, ScrollbarOrientation, ScrollbarState, Table, TableState};
 use ratatui::{Frame, layout::Rect, widgets::Row};
 use transmission_rpc::types::Torrent;
 
@@ -17,8 +17,13 @@ impl<'a> TorrentTable<'a> {
         frame: &mut Frame,
         area: Rect,
         table_state: &mut TableState,
+        scrollbar_state: &mut ScrollbarState,
         theme: &Theme,
     ) {
+        let container = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(vec![Constraint::Percentage(95), Constraint::Percentage(5)])
+            .split(area);
         let header = Row::new([
             "Name",
             "Status",
@@ -69,6 +74,19 @@ impl<'a> TorrentTable<'a> {
                     .add_modifier(ratatui::style::Modifier::BOLD),
             );
 
-        frame.render_stateful_widget(table, area, table_state);
+        let scrollbar = Scrollbar::default()
+            .orientation(ScrollbarOrientation::VerticalRight)
+            .symbols(ratatui::symbols::scrollbar::VERTICAL)
+            .begin_symbol(Some(""))
+            .end_symbol(Some(""))
+            .thumb_style(
+                Style::default()
+                    .fg(Theme::color(&theme.general.foreground))
+                    .bg(Theme::color(&theme.general.background))
+                    .add_modifier(ratatui::style::Modifier::BOLD),
+            );
+
+        frame.render_stateful_widget(table, container[0], table_state);
+        frame.render_stateful_widget(scrollbar, container[1], scrollbar_state);
     }
 }

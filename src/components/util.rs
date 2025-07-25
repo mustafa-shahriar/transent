@@ -22,7 +22,21 @@ pub fn get_entries(path: String) -> Vec<DirEntry> {
     let real_path = expand_path(path);
     let entries = read_dir(&real_path);
     match entries {
-        Ok(entries) => entries.filter_map(|entry| entry.ok()).collect(),
+        Ok(entries) => entries
+            .filter_map(|entry| {
+                entry.ok().and_then(|e| {
+                    let path = e.path();
+                    if path.is_dir()
+                        || (path.is_file()
+                            && path.extension().map_or(false, |ext| ext == "torrent"))
+                    {
+                        Some(e)
+                    } else {
+                        None
+                    }
+                })
+            })
+            .collect(),
         Err(_) => vec![],
     }
 }
