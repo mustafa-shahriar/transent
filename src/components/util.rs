@@ -107,3 +107,8 @@ pub fn readble_speed(byte: i64) -> String {
 
     return round_to_2_decimals(byte).to_string() + " B/s";
 }
+
+pub fn get_conf_dir() -> PathBuf {
+    let config_dir = dirs::config_dir().expect("Could not find config directory");
+    config_dir.join("transent")
+}

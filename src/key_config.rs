@@ -3,6 +3,8 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use crate::components::util;
+
 #[derive(Debug, Clone)]
 pub enum Actions {
     Quit,
@@ -41,7 +43,9 @@ impl FromStr for Actions {
     }
 }
 
-pub fn load_keymap(path: &str) -> HashMap<String, Actions> {
+pub fn load_keymap() -> HashMap<String, Actions> {
+    let path = util::get_conf_dir().join("key_config.toml");
+    let path = path.to_str().unwrap();
     let content = std::fs::read_to_string(path)
         .unwrap_or_else(|_| panic!("❌ Could not read key config file: {}", path));
 

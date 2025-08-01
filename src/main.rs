@@ -18,8 +18,13 @@ use url::Url;
 
 use crate::{
     components::{
-        delete_confirmation::Popup, details, file_picker::FilePicker, files,
-        peers_table::render_peers_table, tabs::render_tabs, util::get_entries,
+        delete_confirmation::Popup,
+        details,
+        file_picker::FilePicker,
+        files,
+        peers_table::render_peers_table,
+        tabs::render_tabs,
+        util::{get_conf_dir, get_entries},
     },
     key_config::load_keymap,
 };
@@ -30,7 +35,9 @@ use std::fs;
 use theme::Theme;
 
 fn load_theme() -> Theme {
-    let content = fs::read_to_string("theme.toml").expect("theme.toml not found");
+    let path = get_conf_dir().join("theme.toml");
+    let path = path.to_str().unwrap();
+    let content = fs::read_to_string(path).expect("theme.toml not found");
     toml::from_str(&content).expect("Invalid theme.toml")
 }
 
@@ -137,7 +144,7 @@ impl App {
         client: Arc<Mutex<TransClient>>,
         torrents_len: usize,
     ) -> Self {
-        let key_map = load_keymap("key_config.toml");
+        let key_map = load_keymap();
         App {
             running: true,
             torrents,
