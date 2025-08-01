@@ -16,6 +16,6 @@ tokio = { version = "1.45.1", features = ["full"] }
 tailwind = "0.1.0"
 toml = "0.8.23"
 serde = "1.0.219"
-derive_setters = "0.1.7"
+derive_setters = "0.1.8"
 home = "0.5.11"
 dirs = "6.0.0"
