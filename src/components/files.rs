@@ -26,7 +26,7 @@ pub fn render_files_tab(
                 .get(i)
                 .map(|p| match p {
                     Priority::Low => "Low",
-                    Priority::Normal => "Nornal",
+                    Priority::Normal => "Normal",
                     Priority::High => "High",
                 })
                 .unwrap_or("N/A");
