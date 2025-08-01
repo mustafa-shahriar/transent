@@ -35,7 +35,7 @@ cargo build --release
 Place configuration files in:
 
 ```
-~/.config/transmission-tui/
+~/.config/transent/
 ```
 
 ### Keybindings (`key_config.toml`)
