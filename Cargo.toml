@@ -14,7 +14,7 @@ transmission-rpc = "0.5.0"
 url = "2.5.4"
 tokio = { version = "1.45.1", features = ["full"] }
 tailwind = "0.1.0"
-toml = "0.8.23"
+toml = "0.9.5"
 serde = "1.0.219"
 derive_setters = "0.1.7"
 home = "0.5.11"
