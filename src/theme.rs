@@ -20,7 +20,6 @@ pub struct Tabs {
     pub active_bg: String,
     pub inactive_fg: String,
     pub inactive_bg: String,
-    pub highlight: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -44,3 +43,4 @@ impl Theme {
         }
     }
 }
+
