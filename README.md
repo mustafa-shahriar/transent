@@ -76,6 +76,7 @@ Place configuration files in:
 | **delete**        | Delete the torrent currently selected.                                     |
 | **delete_with_data** | Delete the torrent **including its data**.                              |
 | **show_actions**  | Open the **action menu**. (`tab_right` selects an action from the menu)     |
+| **add_torrent**  | Open the **File Picker**. (`tab_right` to move to focused dir or to select .torrent file. `tab_left` to back one dir)     |
 
 
 ### Theme (`theme_config.toml`)
