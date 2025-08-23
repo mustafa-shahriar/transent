@@ -53,7 +53,30 @@ Place configuration files in:
 "l" = "tab_right"
 "j" = "row_down"
 "k" = "row_up"
+"p" = "pause"
+"r" = "resume"
+"d" = "delete"
+"SHift+d" = "delete_with_data"
+"a" = "add_torrent"
+"Shift+k" = "show_actions"
 ```
+##  Valid Actions
+
+| Action            | Description                                                                 |
+|-------------------|-----------------------------------------------------------------------------|
+| **quit**          | Quit the app, file picker, delete confirmation widget, or action menu.      |
+| **tab_right**     | Focus on the tab to the **right** of the current one.                      |
+| **tab_left**      | Focus on the tab to the **left** of the current one.                       |
+| **focus_top**     | Focus on the **top** tab group. (`tab_right` / `tab_left` work here)        |
+| **focus_bottom**  | Focus on the **bottom** tab group. (`tab_right` / `tab_left` work here)     |
+| **row_down**      | Move **1 row down** in the table of the selected tab.                      |
+| **row_up**        | Move **1 row up** in the table of the selected tab.                        |
+| **pause**         | Pause the torrent currently selected by row navigation.                    |
+| **resume**        | Resume the torrent currently selected by row navigation.                   |
+| **delete**        | Delete the torrent currently selected.                                     |
+| **delete_with_data** | Delete the torrent **including its data**.                              |
+| **show_actions**  | Open the **action menu**. (`tab_right` selects an action from the menu)     |
+
 
 ### Theme (`theme_config.toml`)
 
