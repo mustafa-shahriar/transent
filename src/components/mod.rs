@@ -1,3 +1,4 @@
+pub mod actions_widget;
 pub mod delete_confirmation;
 pub mod details;
 pub mod file_picker;

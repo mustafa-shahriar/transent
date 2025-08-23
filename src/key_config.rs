@@ -19,6 +19,7 @@ pub enum Actions {
     Delete,
     DeleteWithData,
     AddTorrent,
+    ShowActions,
 }
 
 impl FromStr for Actions {
@@ -38,6 +39,7 @@ impl FromStr for Actions {
             "delete" => Ok(Actions::Delete),
             "delete_with_data" => Ok(Actions::DeleteWithData),
             "add_torrent" => Ok(Actions::AddTorrent),
+            "show_actions" => Ok(Actions::ShowActions),
             _ => Err(()),
         }
     }

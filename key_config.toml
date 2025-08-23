@@ -15,3 +15,4 @@
 "d" = "delete"
 "SHift+d" = "delete_with_data"
 "a" = "add_torrent"
+"Shift+k" = "show_actions"

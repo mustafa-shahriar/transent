@@ -3,7 +3,7 @@ use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Paragraph, ScrollbarState, TableState},
+    widgets::{Clear, Paragraph, ScrollbarState, TableState, Widget},
 };
 use transmission_rpc::{
     TransClient,
@@ -18,6 +18,7 @@ use url::Url;
 
 use crate::{
     components::{
+        actions_widget::render_actions,
         delete_confirmation::Popup,
         details,
         file_picker::FilePicker,
@@ -131,6 +132,8 @@ pub struct App {
     key_map: HashMap<String, Actions>,
     visible_torrents_len: usize,
     show_file_picker: bool,
+    show_actions: bool,
+    action_index: usize,
     file_picker: FilePicker,
     file_picker_state: TableState,
     files_state: TableState,
@@ -160,6 +163,8 @@ impl App {
             key_map: key_map,
             visible_torrents_len: torrents_len,
             show_file_picker: false,
+            show_actions: false,
+            action_index: 0,
             file_picker: FilePicker::new("~/".to_string()),
             file_picker_state: TableState::default(),
             scrollbar_state: ScrollbarState::default(),
@@ -331,6 +336,17 @@ impl App {
             self.file_picker
                 .render(frame, popup_area, &mut self.file_picker_state, &self.theme);
         }
+
+        if self.show_actions {
+            let area = Rect {
+                x: frame.area().width / 4,
+                y: frame.area().height / 3,
+                width: frame.area().width / 2,
+                height: frame.area().height / 2,
+            };
+            Clear.render(area, frame.buffer_mut());
+            render_actions(frame, area, self.action_index, &self.theme);
+        }
     }
 
     async fn handle_crossterm_events(&mut self) -> Result<()> {
@@ -352,10 +368,7 @@ impl App {
         if self.delete_confirmation {
             match key_event_str.as_ref() {
                 "y" | "Y" => {
-                    let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
-                    let mut client = self.client.lock().await;
-                    let _ = client.torrent_remove(ids, self.with_data).await;
-                    self.delete_confirmation = false;
+                    self.delete_torrent().await;
                 }
                 "n" | "N" => {
                     self.delete_confirmation = false;
@@ -367,6 +380,47 @@ impl App {
 
         let action = self.key_map.get(&key_event_str);
         if action.is_none() {
+            return;
+        }
+
+        if self.show_actions {
+            match *action.unwrap() {
+                Actions::Quit => {
+                    self.show_actions = false;
+                    self.action_index = 0;
+                }
+                Actions::RowUp => {
+                    if self.action_index == 0 {
+                        self.action_index = 3;
+                    } else {
+                        self.action_index -= 1;
+                    }
+                }
+                Actions::RowDown => {
+                    if self.action_index == 3 {
+                        self.action_index = 0;
+                    } else {
+                        self.action_index += 1;
+                    }
+                }
+                Actions::TabRight => {
+                    match self.action_index {
+                        0 => self.pause().await,
+                        1 => self.resume().await,
+                        2 => {
+                            self.delete_confirmation = true;
+                            self.with_data = false;
+                        }
+                        3 => {
+                            self.delete_confirmation = true;
+                            self.with_data = true;
+                        }
+                        _ => {}
+                    };
+                    self.show_actions = false;
+                }
+                _ => {}
+            }
             return;
         }
 
@@ -509,14 +563,10 @@ impl App {
                 };
             }
             Actions::Resume if self.selected_torrent_id.is_some() => {
-                let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
-                let mut client = self.client.lock().await;
-                let _ = client.torrent_action(TorrentAction::Start, ids).await;
+                self.resume().await;
             }
             Actions::Pause if self.selected_torrent_id.is_some() => {
-                let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
-                let mut client = self.client.lock().await;
-                let _ = client.torrent_action(TorrentAction::Stop, ids).await;
+                self.pause().await;
             }
             Actions::Delete if self.selected_torrent_id.is_some() => {
                 self.delete_confirmation = true;
@@ -529,8 +579,30 @@ impl App {
             Actions::AddTorrent => {
                 self.show_file_picker = true;
             }
+            Actions::ShowActions if self.selected_torrent_id.is_some() => {
+                self.show_actions = true;
+                self.action_index = 0;
+            }
             _ => {}
         }
+    }
+
+    async fn resume(&mut self) {
+        let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
+        let mut client = self.client.lock().await;
+        let _ = client.torrent_action(TorrentAction::Start, ids).await;
+    }
+    async fn pause(&mut self) {
+        let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
+        let mut client = self.client.lock().await;
+        let _ = client.torrent_action(TorrentAction::Stop, ids).await;
+    }
+
+    async fn delete_torrent(&mut self) {
+        let ids = vec![Id::Hash(self.selected_torrent_id.clone().unwrap())];
+        let mut client = self.client.lock().await;
+        let _ = client.torrent_remove(ids, self.with_data).await;
+        self.delete_confirmation = false;
     }
 
     fn quit(&mut self) {
