@@ -60,7 +60,7 @@ Place configuration files in:
 "a" = "add_torrent"
 "Shift+k" = "show_actions"
 ```
-##  Valid Actions
+####  Valid Actions
 
 | Action            | Description                                                                 |
 |-------------------|-----------------------------------------------------------------------------|
