@@ -10,15 +10,20 @@ pub struct FilePicker {
     pub path: String,
     pub entries: Vec<DirEntry>,
     pub previos_indexes: Vec<usize>,
+
+    pub show_hidden: bool,
+    pub search_string: Option<String>,
 }
 
 impl FilePicker {
-    pub fn new(path: String) -> Self {
+    pub fn new(path: String, show_hidden: bool) -> Self {
         let real_path = expand_path(path.clone());
         FilePicker {
             path: real_path.display().to_string(),
-            entries: get_entries(path.clone()),
+            entries: get_entries(path.clone(), show_hidden),
             previos_indexes: vec![],
+            search_string: None,
+            show_hidden,
         }
     }
 

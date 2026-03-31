@@ -1,8 +1,9 @@
-pub mod actions_widget;
+pub mod action_menu;
 pub mod delete_confirmation;
 pub mod details;
 pub mod file_picker;
 pub mod files;
+pub mod input;
 pub mod peers_table;
 pub mod tabs;
 pub mod torrent_table;

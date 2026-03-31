@@ -1,5 +1,5 @@
 use color_eyre::Result;
-use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Direction, Layout, Rect},
@@ -11,21 +11,22 @@ use transmission_rpc::{
 };
 mod components;
 use components::torrent_table::TorrentTable;
-use std::{cmp::min, collections::HashMap, path::Path, sync::Arc};
+use std::{cmp::min, collections::HashMap, fs::DirEntry, path::Path, sync::Arc};
 use tokio::sync::Mutex;
 use tokio::time::{Duration, sleep};
 use url::Url;
 
 use crate::{
     components::{
-        actions_widget::render_actions,
+        action_menu::render_actions,
         delete_confirmation::Popup,
         details,
         file_picker::FilePicker,
         files,
+        input::{Input, InputMode},
         peers_table::render_peers_table,
         tabs::render_tabs,
-        util::{get_conf_dir, get_entries},
+        util::{fuzzy_match, get_conf_dir, get_entries},
     },
     key_config::load_keymap,
 };
@@ -138,6 +139,7 @@ pub struct App {
     file_picker_state: TableState,
     files_state: TableState,
     scrollbar_state: ScrollbarState,
+    input: Input,
 }
 
 impl App {
@@ -165,10 +167,11 @@ impl App {
             show_file_picker: false,
             show_actions: false,
             action_index: 0,
-            file_picker: FilePicker::new("~/".to_string()),
+            file_picker: FilePicker::new("~/".to_string(), false),
             file_picker_state: TableState::default(),
             scrollbar_state: ScrollbarState::default(),
             files_state: TableState::default(),
+            input: Input::new(false),
         }
     }
 
@@ -329,12 +332,28 @@ impl App {
         if self.show_file_picker {
             let popup_area = Rect {
                 x: frame.area().width / 4,
-                y: frame.area().height / 3,
+                y: frame.area().height / 4,
                 width: frame.area().width / 2,
-                height: frame.area().height / 2,
+                height: (frame.area().height as f64 / 1.5) as u16,
             };
+
+            let top = if self.input.is_active { 80 } else { 100 };
+            let bottom = if self.input.is_active { 20 } else { 0 };
+
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(1)
+                .constraints(vec![
+                    Constraint::Percentage(top),
+                    Constraint::Percentage(bottom),
+                ])
+                .split(popup_area);
+
             self.file_picker
-                .render(frame, popup_area, &mut self.file_picker_state, &self.theme);
+                .render(frame, chunks[0], &mut self.file_picker_state, &self.theme);
+            if self.input.is_active {
+                self.input.render(frame, chunks[1]);
+            }
         }
 
         if self.show_actions {
@@ -378,6 +397,11 @@ impl App {
             return;
         }
 
+        if self.show_file_picker {
+            self.handle_file_picker(&key).await;
+            return;
+        }
+
         let action = self.key_map.get(&key_event_str);
         if action.is_none() {
             return;
@@ -418,64 +442,6 @@ impl App {
                         _ => {}
                     };
                     self.show_actions = false;
-                }
-                _ => {}
-            }
-            return;
-        }
-
-        if self.show_file_picker {
-            match *action.unwrap() {
-                Actions::Quit => {
-                    self.show_file_picker = false;
-                }
-                Actions::RowDown => {
-                    self.file_picker_state.select_next();
-                }
-                Actions::RowUp => {
-                    self.file_picker_state.select_previous();
-                }
-                Actions::TabRight => match self.file_picker_state.selected() {
-                    Some(n) => {
-                        self.file_picker.previos_indexes.push(n);
-                        let selected_path = self.file_picker.entries[n]
-                            .path()
-                            .canonicalize()
-                            .unwrap()
-                            .display()
-                            .to_string();
-                        self.file_picker.path = selected_path;
-                        if self.file_picker.path.ends_with(".torrent") {
-                            let mut t = TorrentAddArgs::default();
-                            t.files_unwanted = None;
-                            t.filename = Some(self.file_picker.path.clone());
-                            let r = self.client.lock().await.torrent_add(t).await;
-                            match r {
-                                Ok(_) => self.show_file_picker = false,
-                                Err(_) => {}
-                            }
-                            return;
-                        };
-                        let entries = get_entries(self.file_picker.path.clone());
-                        match entries.len() {
-                            0 => self.file_picker_state.select(None),
-                            _ => self.file_picker_state.select(Some(1)),
-                        }
-                        self.file_picker.entries = entries;
-                    }
-                    None => {}
-                },
-                Actions::TabLeft => {
-                    let path = Path::new(&self.file_picker.path);
-                    match path.parent() {
-                        Some(parent) => {
-                            self.file_picker.path = parent.display().to_string();
-                            self.file_picker.entries = get_entries(self.file_picker.path.clone());
-                            self.file_picker_state
-                                .select(self.file_picker.previos_indexes.pop());
-                        }
-                        None => {}
-                    }
                 }
                 _ => {}
             }
@@ -585,6 +551,126 @@ impl App {
             }
             _ => {}
         }
+    }
+
+    async fn handle_file_picker(&mut self, key: &KeyEvent) {
+        if self.input.is_active {
+            match self.input.input_mode {
+                InputMode::Normal => match key.code {
+                    KeyCode::Char('i') => {
+                        self.input.input_mode = InputMode::Editing;
+                        return;
+                    }
+                    KeyCode::Char('q') | KeyCode::Esc => {
+                        self.input.is_active = false;
+                        self.input.input = "".to_string();
+                        self.file_picker.search_string = None;
+                        return;
+                    }
+                    _ => {}
+                },
+                InputMode::Editing if key.kind == KeyEventKind::Press => {
+                    match key.code {
+                        KeyCode::Enter => self.input.input_mode = InputMode::Normal,
+                        KeyCode::Char(to_insert) => self.input.enter_char(to_insert),
+                        KeyCode::Backspace => self.input.delete_char(),
+                        KeyCode::Left => self.input.move_cursor_left(),
+                        KeyCode::Right => self.input.move_cursor_right(),
+                        KeyCode::Esc => self.input.input_mode = InputMode::Normal,
+                        _ => {}
+                    };
+                    self.file_picker.search_string = Some(self.input.input.clone());
+                    self.set_file_picker_entries();
+                    return;
+                }
+                InputMode::Editing => {}
+            }
+        }
+
+        let action = self.key_map.get(&key.code.to_string());
+        if action.is_none() {
+            return;
+        }
+        match *action.unwrap() {
+            Actions::Quit => {
+                self.show_file_picker = false;
+            }
+            Actions::RowDown => {
+                self.file_picker_state.select_next();
+            }
+            Actions::RowUp => {
+                self.file_picker_state.select_previous();
+            }
+            Actions::TabRight => {
+                self.input.is_active = false;
+                self.input.input = "".to_string();
+                self.file_picker.search_string = None;
+                match self.file_picker_state.selected() {
+                    Some(n) => {
+                        self.file_picker.previos_indexes.push(n);
+                        let selected_path = self.file_picker.entries[n]
+                            .path()
+                            .canonicalize()
+                            .unwrap()
+                            .display()
+                            .to_string();
+                        self.file_picker.path = selected_path;
+                        if self.file_picker.path.ends_with(".torrent") {
+                            let mut t = TorrentAddArgs::default();
+                            t.files_unwanted = None;
+                            t.filename = Some(self.file_picker.path.clone());
+                            let r = self.client.lock().await.torrent_add(t).await;
+                            match r {
+                                Ok(_) => self.show_file_picker = false,
+                                Err(_) => {}
+                            }
+                            return;
+                        };
+                        self.set_file_picker_entries();
+                        match self.file_picker.entries.len() {
+                            0 => self.file_picker_state.select(None),
+                            _ => self.file_picker_state.select(Some(1)),
+                        }
+                    }
+                    None => {}
+                };
+            }
+            Actions::TabLeft => {
+                self.input.is_active = false;
+                self.input.input = "".to_string();
+                self.file_picker.search_string = None;
+                let path = Path::new(&self.file_picker.path);
+                match path.parent() {
+                    Some(parent) => {
+                        self.file_picker.path = parent.display().to_string();
+                        self.file_picker.entries =
+                            get_entries(self.file_picker.path.clone(), false);
+                        self.file_picker_state
+                            .select(self.file_picker.previos_indexes.pop());
+                    }
+                    None => {}
+                }
+            }
+            Actions::Search => self.input.is_active = true,
+            _ => {}
+        }
+    }
+
+    pub fn set_file_picker_entries(&mut self) {
+        let entries = get_entries(self.file_picker.path.clone(), self.file_picker.show_hidden);
+        let filtered_entries: Vec<DirEntry> = if let Some(search) = &self.file_picker.search_string
+        {
+            entries
+                .into_iter()
+                .filter(|entry| {
+                    let name = entry.file_name().to_string_lossy().to_lowercase();
+                    fuzzy_match(&name, &search.to_lowercase())
+                })
+                .collect()
+        } else {
+            entries.into_iter().collect()
+        };
+        self.file_picker.entries = filtered_entries;
     }
 
     async fn resume(&mut self) {

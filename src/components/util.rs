@@ -1,5 +1,6 @@
 use home::home_dir;
 use std::{
+    cmp::Ordering,
     fs::{DirEntry, read_dir},
     path::{Path, PathBuf},
     time::Duration,
@@ -18,17 +19,32 @@ pub fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {
     p.to_path_buf()
 }
 
-pub fn get_entries(path: String) -> Vec<DirEntry> {
+pub fn get_entries(path: String, show_hidden: bool) -> Vec<DirEntry> {
     let real_path = expand_path(path);
-    let entries = read_dir(&real_path);
-    match entries {
+
+    let mut entries: Vec<DirEntry> = match read_dir(&real_path) {
         Ok(entries) => entries
             .filter_map(|entry| {
                 entry.ok().and_then(|e| {
                     let path = e.path();
+
+                    let is_hidden = e
+                        .file_name()
+                        .to_str()
+                        .map(|name| name.starts_with('.'))
+                        .unwrap_or(false);
+
+                    if !show_hidden && is_hidden {
+                        return None;
+                    }
+
                     if path.is_dir()
                         || (path.is_file()
-                            && path.extension().map_or(false, |ext| ext == "torrent"))
+                            && path
+                                .extension()
+                                .and_then(|ext| ext.to_str())
+                                .map(|ext| ext.eq_ignore_ascii_case("torrent"))
+                                .unwrap_or(false))
                     {
                         Some(e)
                     } else {
@@ -37,8 +53,46 @@ pub fn get_entries(path: String) -> Vec<DirEntry> {
                 })
             })
             .collect(),
-        Err(_) => vec![],
+        Err(_) => return vec![],
+    };
+
+    entries.sort_by(|a, b| {
+        let a_path = a.path();
+        let b_path = b.path();
+
+        match (a_path.is_dir(), b_path.is_dir()) {
+            (true, false) => return Ordering::Less,
+            (false, true) => return Ordering::Greater,
+            _ => {}
+        }
+
+        let a_name = a.file_name().to_string_lossy().to_lowercase();
+        let b_name = b.file_name().to_string_lossy().to_lowercase();
+
+        a_name.cmp(&b_name)
+    });
+
+    entries
+}
+
+pub fn fuzzy_match(text: &str, query: &str) -> bool {
+    let mut query_chars = query.chars();
+
+    let mut current = match query_chars.next() {
+        Some(c) => c,
+        None => return true,
+    };
+
+    for c in text.chars() {
+        if c == current {
+            match query_chars.next() {
+                Some(next) => current = next,
+                None => return true,
+            }
+        }
     }
+
+    false
 }
 
 pub fn readabl_eta(eta: i64) -> String {
