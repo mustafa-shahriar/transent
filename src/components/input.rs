@@ -35,8 +35,6 @@ pub struct Input {
     pub character_index: usize,
     /// Current input mode
     pub input_mode: InputMode,
-    /// History of recorded messages
-    pub messages: Vec<String>,
 }
 
 pub enum InputMode {
@@ -50,7 +48,6 @@ impl Input {
             is_active,
             input: String::new(),
             input_mode: InputMode::Editing,
-            messages: Vec::new(),
             character_index: 0,
         }
     }
@@ -111,12 +108,6 @@ impl Input {
 
     pub const fn reset_cursor(&mut self) {
         self.character_index = 0;
-    }
-
-    pub fn submit_message(&mut self) {
-        self.messages.push(self.input.clone());
-        self.input.clear();
-        self.reset_cursor();
     }
 
     // fn run(mut self, terminal: &mut DefaultTerminal) -> Result<()> {
