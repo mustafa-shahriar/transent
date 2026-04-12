@@ -1,5 +1,5 @@
 pub mod custome_tab;
-pub mod delete_pup_up;
+pub mod delete_popup;
 pub mod file_picker;
 pub mod files_table;
 pub mod input;

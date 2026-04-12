@@ -1,6 +1,6 @@
 use crate::theme::Theme;
 use crate::widgets::custome_tab::CustomeTabs;
-use crate::widgets::delete_pup_up::DeletePopup;
+use crate::widgets::delete_popup::DeletePopup;
 use crate::widgets::files_table::FilesTable;
 use crate::widgets::peers_table::PeersTable;
 use crate::widgets::torrent_actions::TorrentActions;
