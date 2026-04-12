@@ -23,6 +23,7 @@ impl PeersTable {
             state: TableState::default(),
         }
     }
+    
     pub fn render(&mut self, frame: &mut Frame, area: Rect, theme: &Theme) {
         let header = Row::new(["Adress", "Client", "Download Speed", "Upload Speed"])
             .style(Style::new().bold());
