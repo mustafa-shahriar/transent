@@ -1,10 +1,14 @@
 use home::home_dir;
-use std::{
-    cmp::Ordering,
-    fs::{DirEntry, read_dir},
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use ratatui::layout::Constraint;
+use ratatui::layout::Direction;
+use ratatui::layout::Layout;
+use ratatui::layout::Rect;
+use std::cmp::Ordering;
+use std::fs::DirEntry;
+use std::fs::read_dir;
+use std::path::Path;
+use std::path::PathBuf;
+use std::time::Duration;
 use transmission_rpc::types::TorrentStatus;
 
 pub fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {
@@ -165,4 +169,24 @@ pub fn readble_speed(byte: i64) -> String {
 pub fn get_conf_dir() -> PathBuf {
     let config_dir = dirs::config_dir().expect("Could not find config directory");
     config_dir.join("transent")
+}
+
+pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }

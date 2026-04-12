@@ -1,0 +1,9 @@
+pub mod custome_tab;
+pub mod delete_pup_up;
+pub mod file_picker;
+pub mod files_table;
+pub mod input;
+pub mod peers_table;
+pub mod torrent_actions;
+pub mod torrent_details;
+pub mod torrent_table;

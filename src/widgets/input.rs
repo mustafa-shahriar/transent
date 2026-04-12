@@ -1,34 +1,24 @@
-/// A simple example demonstrating how to handle user input.
-///
-/// This is a bit out of the scope of
-/// the library as it does not provide any input handling out of the box. However, it may helps
-/// some to get started.
-///
-/// This is a very simple example:
-///   * An input box always focused. Every character you type is registered here.
-///   * An entered character is inserted at the cursor position.
-///   * Pressing Backspace erases the left character before the cursor position
-///   * Pressing Enter pushes the current input in the history of previous messages.
-///
-/// **Note:** as this is a relatively simple example unicode characters are unsupported and
-/// their use will result in undefined behaviour.
-///
-/// See also <https://github.com/ratatui/ratatui-textarea> and <https://github.com/sayanarijit/tui-input>/
-///
-/// This example runs with the Ratatui library code in the branch that you are currently
-/// reading. See the [`latest`] branch for the code which works with the most recent Ratatui
-/// release.
-///
-/// [`latest`]: https://github.com/ratatui/ratatui/tree/latest
 use ratatui::Frame;
-use ratatui::layout::{Constraint, Direction, Layout, Position, Rect};
-use ratatui::style::{Color, Modifier, Style, Stylize};
-use ratatui::text::{Line, Text};
-use ratatui::widgets::{Block, Paragraph};
+
+use ratatui::layout::Constraint;
+use ratatui::layout::Direction;
+use ratatui::layout::Layout;
+use ratatui::layout::Position;
+use ratatui::layout::Rect;
+
+use ratatui::style::Color;
+use ratatui::style::Modifier;
+use ratatui::style::Style;
+use ratatui::style::Stylize;
+
+use ratatui::text::Line;
+use ratatui::text::Text;
+
+use ratatui::widgets::Block;
+use ratatui::widgets::Paragraph;
 
 /// App holds the state of the application
 pub struct Input {
-    pub is_active: bool,
     /// Current value of the input box
     pub input: String,
     /// Position of cursor in the editor area.
@@ -43,9 +33,8 @@ pub enum InputMode {
 }
 
 impl Input {
-    pub const fn new(is_active: bool) -> Self {
+    pub const fn new() -> Self {
         Self {
-            is_active,
             input: String::new(),
             input_mode: InputMode::Editing,
             character_index: 0,
@@ -152,7 +141,7 @@ impl Input {
                     "Press ".into(),
                     "q".bold(),
                     " to exit, ".into(),
-                    "e".bold(),
+                    "i".bold(),
                     " to start editing.".bold(),
                 ],
                 Style::default().add_modifier(Modifier::RAPID_BLINK),

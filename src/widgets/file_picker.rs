@@ -1,15 +1,26 @@
-use crate::components::util::{expand_path, get_entries};
 use crate::theme::Theme;
-use ratatui::layout::{Alignment, Constraint};
+use crate::util::centered_rect;
+use crate::util::expand_path;
+use crate::util::get_entries;
+
+use ratatui::Frame;
+use ratatui::layout::Alignment;
+use ratatui::layout::Constraint;
 use ratatui::style::Style;
-use ratatui::widgets::{Block, Borders, Clear, Padding, Table, TableState};
-use ratatui::{Frame, layout::Rect, widgets::Row};
+use ratatui::widgets::Block;
+use ratatui::widgets::Borders;
+use ratatui::widgets::Clear;
+use ratatui::widgets::Padding;
+use ratatui::widgets::Row;
+use ratatui::widgets::Table;
+use ratatui::widgets::TableState;
 use std::fs::DirEntry;
 
 pub struct FilePicker {
     pub path: String,
     pub entries: Vec<DirEntry>,
-    pub previos_indexes: Vec<usize>,
+    pub prev_states: Vec<TableState>,
+    state: TableState,
 
     pub show_hidden: bool,
     pub search_string: Option<String>,
@@ -21,19 +32,15 @@ impl FilePicker {
         FilePicker {
             path: real_path.display().to_string(),
             entries: get_entries(path.clone(), show_hidden),
-            previos_indexes: vec![],
+            prev_states: vec![],
+            state: TableState::default(),
             search_string: None,
             show_hidden,
         }
     }
 
-    pub fn render(
-        self: &Self,
-        frame: &mut Frame,
-        area: Rect,
-        state: &mut TableState,
-        theme: &Theme,
-    ) {
+    pub fn render(&mut self, frame: &mut Frame, theme: &Theme) {
+        let area = centered_rect(50, 66, frame.area());
         frame.render_widget(Clear, area);
 
         let rows: Vec<Row> = self
@@ -61,7 +68,7 @@ impl FilePicker {
             )
             .block(block);
 
-        frame.render_stateful_widget(table, area, state);
+        frame.render_stateful_widget(table, area, &mut self.state);
     }
 }
 

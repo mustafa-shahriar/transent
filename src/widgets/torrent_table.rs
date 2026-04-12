@@ -1,25 +1,45 @@
-use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::style::{Style, Stylize};
-use ratatui::widgets::{Scrollbar, ScrollbarOrientation, ScrollbarState, Table, TableState};
-use ratatui::{Frame, layout::Rect, widgets::Row};
+use ratatui::Frame;
+use ratatui::layout::Constraint;
+use ratatui::layout::Direction;
+use ratatui::layout::Layout;
+use ratatui::layout::Rect;
+use ratatui::style::Style;
+use ratatui::style::Stylize;
+use ratatui::widgets::Scrollbar;
+use ratatui::widgets::ScrollbarOrientation;
+use ratatui::widgets::ScrollbarState;
+use ratatui::widgets::Table;
+use ratatui::widgets::TableState;
+use ratatui::widgets::Row;
 use transmission_rpc::types::Torrent;
 
-use crate::components::util::{readabl_eta, readble_speed, status_to_string};
 use crate::theme::Theme;
+use crate::util::readabl_eta;
+use crate::util::readble_speed;
+use crate::util::status_to_string;
 
-pub struct TorrentTable<'a> {
-    pub torrents: &'a [Torrent],
+pub struct TorrentTable {
+    pub torrents: Vec<Torrent>,
+    pub state: TableState,
+    pub scrollbar_state: ScrollbarState,
 }
 
-impl<'a> TorrentTable<'a> {
-    pub fn render(
-        &self,
-        frame: &mut Frame,
-        area: Rect,
-        table_state: &mut TableState,
-        scrollbar_state: &mut ScrollbarState,
-        theme: &Theme,
-    ) {
+impl TorrentTable {
+    pub fn select_next(&mut self) {
+        match self.state.selected() {
+            Some(n) if n >= self.torrents.len() - 1 => self.state.select(Some(0)),
+            _ => self.state.select_next(),
+        }
+    }
+
+    pub fn select_prev(&mut self) {
+        match self.state.selected() {
+            Some(n) if n <= 0 => self.state.select(Some(self.torrents.len() - 1)),
+            _ => self.state.select_previous(),
+        }
+    }
+
+    pub fn render(&mut self, frame: &mut Frame, area: Rect, theme: &Theme) {
         let container = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(vec![Constraint::Percentage(95), Constraint::Percentage(5)])
@@ -86,7 +106,7 @@ impl<'a> TorrentTable<'a> {
                     .add_modifier(ratatui::style::Modifier::BOLD),
             );
 
-        frame.render_stateful_widget(table, container[0], table_state);
-        frame.render_stateful_widget(scrollbar, container[1], scrollbar_state);
+        frame.render_stateful_widget(table, container[0], &mut self.state);
+        frame.render_stateful_widget(scrollbar, container[1], &mut self.scrollbar_state);
     }
 }
