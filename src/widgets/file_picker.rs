@@ -53,7 +53,7 @@ impl FilePicker {
     }
 
     fn filter(&mut self) {
-        if !self.input.is_active || self.input.input == "" {
+        if !self.input.is_active {
             return;
         }
 
