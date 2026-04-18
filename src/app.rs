@@ -196,8 +196,13 @@ impl App {
         self.top_tab.render(frame, chunks[0], &self.theme);
         self.top_table.render(frame, chunks[1], &self.theme);
         self.bottom_tab.render(frame, chunks[2], &self.theme);
+
         match self.bottom_tab.selected_tab().parse().unwrap() {
-            BottomTab::Details => self.bottom_pane.details_block.render(frame, chunks[3]),
+            BottomTab::Details => {
+                self.bottom_pane
+                    .details_block
+                    .render(frame, chunks[3], &self.theme)
+            }
             BottomTab::Peers => {
                 self.bottom_pane
                     .peers_table
