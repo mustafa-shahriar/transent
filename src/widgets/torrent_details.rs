@@ -48,48 +48,48 @@ impl Details {
                     .bg(Theme::color(&theme.general.background));
 
                 let alt_row_style = Style::default()
-                    .fg(Theme::color(&theme.general.foreground))
-                    .bg(Theme::color(&theme.general.background));
+                    .bg(Theme::color(&theme.table.row_highlight_fg))
+                    .fg(Theme::color(&theme.table.row_highlight_bg));
 
                 let rows = vec![
-                    Row::new(vec![Cell::from("Name"), Cell::from(name.as_str())]).style(base_style),
+                    Row::new(vec![Cell::from("Name"), Cell::from(name.as_str())]).style(alt_row_style),
                     Row::new(vec![Cell::from("Status"), Cell::from(status.as_str())])
-                        .style(alt_row_style),
+                        .style(base_style),
                     Row::new(vec![
                         Cell::from("Progress"),
                         Cell::from(progress_str.as_str()),
                     ])
-                    .style(base_style),
+                    .style(alt_row_style),
                     Row::new(vec![
                         Cell::from("Total Size"),
                         Cell::from(total_size.as_str()),
                     ])
-                    .style(alt_row_style),
+                    .style(base_style),
                     Row::new(vec![
                         Cell::from("Downloaded"),
                         Cell::from(downloaded.as_str()),
                     ])
-                    .style(base_style),
+                    .style(alt_row_style),
                     Row::new(vec![Cell::from("Uploaded"), Cell::from(uploaded.as_str())])
-                        .style(alt_row_style),
+                        .style(base_style),
                     Row::new(vec![
                         Cell::from("Download Speed"),
                         Cell::from(down_speed.as_str()),
                     ])
-                    .style(base_style),
+                    .style(alt_row_style),
                     Row::new(vec![
                         Cell::from("Upload Speed"),
                         Cell::from(up_speed.as_str()),
                     ])
-                    .style(alt_row_style),
-                    Row::new(vec![Cell::from("ETA"), Cell::from(eta.as_str())]).style(base_style),
+                    .style(base_style),
+                    Row::new(vec![Cell::from("ETA"), Cell::from(eta.as_str())]).style(alt_row_style),
                     Row::new(vec![
                         Cell::from("Connected Peers"),
                         Cell::from(peers_str.as_str()),
                     ])
-                    .style(alt_row_style),
+                    .style(base_style),
                     Row::new(vec![Cell::from("Seeds"), Cell::from(seeds_str.as_str())])
-                        .style(base_style),
+                        .style(alt_row_style),
                 ];
 
                 let widths = vec![Constraint::Percentage(25), Constraint::Percentage(75)];
