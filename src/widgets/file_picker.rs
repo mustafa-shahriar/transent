@@ -1,13 +1,20 @@
 use crate::theme::Theme;
 use crate::util::centered_rect;
 use crate::util::expand_path;
+use crate::util::fuzzy_match;
 use crate::util::get_entries;
+use crate::util::icon_for;
+use crate::widgets::input::Input;
 
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
 use ratatui::Frame;
 use ratatui::layout::Alignment;
 use ratatui::layout::Constraint;
+use ratatui::layout::Constraint::Length;
+use ratatui::layout::Constraint::Percentage;
+use ratatui::layout::Direction;
+use ratatui::layout::Layout;
 use ratatui::style::Style;
 use ratatui::widgets::Block;
 use ratatui::widgets::Borders;
@@ -29,7 +36,7 @@ pub struct FilePicker {
     state: TableState,
 
     pub show_hidden: bool,
-    pub search_string: Option<String>,
+    pub input: Input,
 }
 
 impl FilePicker {
@@ -40,9 +47,25 @@ impl FilePicker {
             entries: get_entries(path.clone(), show_hidden),
             prev_states: vec![],
             state: TableState::default(),
-            search_string: None,
+            input: Input::new(),
             show_hidden,
         }
+    }
+
+    fn filter(&mut self) {
+        if !self.input.is_active || self.input.input == "" {
+            return;
+        }
+
+        let input = self.input.input.to_lowercase();
+        let entries = get_entries(self.path.to_string(), self.show_hidden);
+        self.entries = entries
+            .into_iter()
+            .filter(|entry| {
+                let name = entry.file_name().to_string_lossy().to_lowercase();
+                fuzzy_match(&name, &input)
+            })
+            .collect();
     }
 
     fn select_next(&mut self) {
@@ -60,22 +83,29 @@ impl FilePicker {
     }
 
     fn go_back(&mut self) {
-        let path = Path::new(&self.path);
+        self.input.input = "".to_string();
+        let path = Path::new(&self.path).to_path_buf();
         match path.parent() {
             Some(parent) => {
                 self.path = parent.display().to_string();
                 self.entries = get_entries(self.path.clone(), false);
-                if self.prev_states.len() != 0 {
+                if !self.prev_states.is_empty() {
                     self.state = self.prev_states.pop().unwrap();
                 }
+                let index = self
+                    .entries
+                    .iter()
+                    .position(|el| el.path().to_str().unwrap() == path.to_str().unwrap());
+                self.state.select(index);
             }
             None => {}
         }
     }
 
     async fn select_entry(&mut self, client: &Arc<Mutex<transmission_rpc::TransClient>>) -> bool {
+        self.input.input = "".to_string();
         match self.state.selected() {
-            Some(n) => {
+            Some(n) if n < self.entries.len() => {
                 self.prev_states.push(self.state.clone());
                 let selected_path = self.entries[n]
                     .path()
@@ -97,13 +127,14 @@ impl FilePicker {
                     return false;
                 };
 
-                self.entries = get_entries(self.path.to_string(), false);
+                self.entries = get_entries(self.path.to_string(), self.show_hidden);
                 match self.entries.len() {
                     0 => self.state.select(None),
                     _ => self.state.select(Some(0)),
                 }
             }
             None => {}
+            _ => {}
         }
         false
     }
@@ -113,11 +144,19 @@ impl FilePicker {
         key: KeyEvent,
         client: &Arc<Mutex<transmission_rpc::TransClient>>,
     ) -> bool {
+        if self.input.is_active {
+            self.input.handler(key);
+            self.filter();
+            return false;
+        }
+
         match key.code {
             KeyCode::Char('j') => self.select_next(),
             KeyCode::Char('k') => self.select_prev(),
             KeyCode::Char('h') => self.go_back(),
             KeyCode::Char('l') => return self.select_entry(client).await,
+            KeyCode::Char('/') => self.input.is_active = true,
+            KeyCode::Char('q') => return true,
             _ => {}
         }
         false
@@ -126,6 +165,12 @@ impl FilePicker {
     pub fn render(&mut self, frame: &mut Frame, theme: &Theme) {
         let area = centered_rect(50, 66, frame.area());
         frame.render_widget(Clear, area);
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(1)
+            .constraints(vec![Percentage(80), Percentage(20)])
+            .split(area);
 
         let rows: Vec<Row> = self
             .entries
@@ -152,23 +197,11 @@ impl FilePicker {
             )
             .block(block);
 
-        frame.render_stateful_widget(table, area, &mut self.state);
-    }
-}
-
-pub fn icon_for(entry: &DirEntry) -> &'static str {
-    let path = entry.path();
-
-    if path.is_dir() {
-        return "📁";
-    }
-
-    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-        match ext.to_lowercase().as_str() {
-            "torrent" => "🌊", // Torrent
-            _ => "📄",         // Default for other files
+        if self.input.is_active {
+            frame.render_stateful_widget(table, chunks[0], &mut self.state);
+            self.input.render(frame, chunks[1]);
+        } else {
+            frame.render_stateful_widget(table, area, &mut self.state);
         }
-    } else {
-        "📄"
     }
 }

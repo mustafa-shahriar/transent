@@ -1,7 +1,6 @@
 use ratatui::Frame;
 use ratatui::layout::Constraint;
 use ratatui::layout::Rect;
-use ratatui::style::Color;
 use ratatui::style::Style;
 use ratatui::widgets::Block;
 use ratatui::widgets::Borders;
@@ -38,10 +37,8 @@ impl Details {
                 let down_speed = readble_speed(torrent.rate_download.unwrap_or(0));
                 let up_speed = readble_speed(torrent.rate_upload.unwrap_or(0));
                 let eta = readabl_eta(torrent.eta.unwrap_or(-1));
-                let peers = torrent.peers_connected.unwrap_or(0);
-                let peers_str = format!("{peers}");
-                let seeds = torrent.peers_getting_from_us.unwrap_or(0);
-                let seeds_str = format!("{seeds}");
+                let peers = torrent.peers_connected.unwrap_or(0).to_string();
+                let seeds = torrent.peers_getting_from_us.unwrap_or(0).to_string();
 
                 let base_style = Style::default()
                     .fg(Theme::color(&theme.general.foreground))
@@ -52,7 +49,8 @@ impl Details {
                     .fg(Theme::color(&theme.table.row_highlight_bg));
 
                 let rows = vec![
-                    Row::new(vec![Cell::from("Name"), Cell::from(name.as_str())]).style(alt_row_style),
+                    Row::new(vec![Cell::from("Name"), Cell::from(name.as_str())])
+                        .style(alt_row_style),
                     Row::new(vec![Cell::from("Status"), Cell::from(status.as_str())])
                         .style(base_style),
                     Row::new(vec![
@@ -82,14 +80,11 @@ impl Details {
                         Cell::from(up_speed.as_str()),
                     ])
                     .style(base_style),
-                    Row::new(vec![Cell::from("ETA"), Cell::from(eta.as_str())]).style(alt_row_style),
-                    Row::new(vec![
-                        Cell::from("Connected Peers"),
-                        Cell::from(peers_str.as_str()),
-                    ])
-                    .style(base_style),
-                    Row::new(vec![Cell::from("Seeds"), Cell::from(seeds_str.as_str())])
+                    Row::new(vec![Cell::from("ETA"), Cell::from(eta.as_str())])
                         .style(alt_row_style),
+                    Row::new(vec![Cell::from("Connected Peers"), Cell::from(peers)])
+                        .style(base_style),
+                    Row::new(vec![Cell::from("Seeds"), Cell::from(seeds)]).style(alt_row_style),
                 ];
 
                 let widths = vec![Constraint::Percentage(25), Constraint::Percentage(75)];

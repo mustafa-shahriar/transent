@@ -190,3 +190,20 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         ])
         .split(popup_layout[1])[1]
 }
+
+pub fn icon_for(entry: &DirEntry) -> &'static str {
+    let path = entry.path();
+
+    if path.is_dir() {
+        return "📁";
+    }
+
+    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+        match ext.to_lowercase().as_str() {
+            "torrent" => "🌊", // Torrent
+            _ => "📄",         // Default for other files
+        }
+    } else {
+        "📄"
+    }
+}

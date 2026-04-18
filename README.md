@@ -6,7 +6,6 @@ A terminal user interface (TUI) for managing torrents via Transmission, written 
 
 - View and navigate torrents
 - Switch tabs and focus areas
-- Configurable keybindings
 - Configurable theme
 
 ## Installation
@@ -34,52 +33,21 @@ cargo build --release
 
 Place configuration files in:
 
+
 ```
 ~/.config/transent/
 ```
-
-### Keybindings (`key_config.toml`)
+### Theme (`config.toml`)
 
 ```toml
-[keybindings]
-"q" = "quit"
-"Esc" = "quit"
-"Ctrl+c" = "quit"
-"Ctrl+j" = "focus_bottom"
-"Ctrl+k" = "focus_top"
-"Ctrl+l" = "focus_bottom"
-"Ctrl+h" = "focus_top"
-"h" = "tab_left"
-"l" = "tab_right"
-"j" = "row_down"
-"k" = "row_up"
-"p" = "pause"
-"r" = "resume"
-"d" = "delete"
-"SHift+d" = "delete_with_data"
-"a" = "add_torrent"
-"Shift+k" = "show_actions"
+rpc_url = "transmission-daemon url with password"
+
 ```
-####  Valid Actions
 
-| Action            | Description                                                                 |
-|-------------------|-----------------------------------------------------------------------------|
-| **quit**          | Quit the app, file picker, delete confirmation widget, or action menu.      |
-| **tab_right**     | Focus on the tab to the **right** of the current one.                      |
-| **tab_left**      | Focus on the tab to the **left** of the current one.                       |
-| **focus_top**     | Focus on the **top** tab group. (`tab_right` / `tab_left` work here)        |
-| **focus_bottom**  | Focus on the **bottom** tab group. (`tab_right` / `tab_left` work here)     |
-| **row_down**      | Move **1 row down** in the table of the selected tab.                      |
-| **row_up**        | Move **1 row up** in the table of the selected tab.                        |
-| **pause**         | Pause the torrent currently selected by row navigation.                    |
-| **resume**        | Resume the torrent currently selected by row navigation.                   |
-| **delete**        | Delete the torrent currently selected.                                     |
-| **delete_with_data** | Delete the torrent **including its data**.                              |
-| **show_actions**  | Open the **action menu**. (`tab_right` selects an action from the menu)     |
-| **add_torrent**  | Open the **File Picker**. (`tab_right` to move to focused dir or to select .torrent file. `tab_left` to back one dir)     |
-
-
-### Theme (`theme_config.toml`)
+```
+~/.config/transent/
+```
+### Theme (`theme.toml`)
 
 ```toml
 [general]

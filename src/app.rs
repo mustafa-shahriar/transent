@@ -312,11 +312,6 @@ impl App {
     }
 
     async fn handle_filepicker(&mut self, key: KeyEvent) {
-        if key.code == KeyCode::Char('q') {
-            self.popup = None;
-            return;
-        }
-
         if self.file_picker.handler(key, &self.client).await {
             self.popup = None;
         }

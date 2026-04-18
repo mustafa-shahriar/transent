@@ -1,3 +1,5 @@
+use crossterm::event::KeyCode;
+use crossterm::event::KeyEvent;
 use ratatui::Frame;
 
 use ratatui::layout::Constraint;
@@ -22,9 +24,10 @@ pub struct Input {
     /// Current value of the input box
     pub input: String,
     /// Position of cursor in the editor area.
-    pub character_index: usize,
+    character_index: usize,
     /// Current input mode
-    pub input_mode: InputMode,
+    input_mode: InputMode,
+    pub is_active: bool,
 }
 
 pub enum InputMode {
@@ -38,20 +41,21 @@ impl Input {
             input: String::new(),
             input_mode: InputMode::Editing,
             character_index: 0,
+            is_active: false,
         }
     }
 
-    pub fn move_cursor_left(&mut self) {
+    fn move_cursor_left(&mut self) {
         let cursor_moved_left = self.character_index.saturating_sub(1);
         self.character_index = self.clamp_cursor(cursor_moved_left);
     }
 
-    pub fn move_cursor_right(&mut self) {
+    fn move_cursor_right(&mut self) {
         let cursor_moved_right = self.character_index.saturating_add(1);
         self.character_index = self.clamp_cursor(cursor_moved_right);
     }
 
-    pub fn enter_char(&mut self, new_char: char) {
+    fn enter_char(&mut self, new_char: char) {
         let index = self.byte_index();
         self.input.insert(index, new_char);
         self.move_cursor_right();
@@ -61,7 +65,7 @@ impl Input {
     ///
     /// Since each character in a string can contain multiple bytes, it's necessary to calculate
     /// the byte index based on the index of the character.
-    pub fn byte_index(&self) -> usize {
+    fn byte_index(&self) -> usize {
         self.input
             .char_indices()
             .map(|(i, _)| i)
@@ -69,7 +73,7 @@ impl Input {
             .unwrap_or(self.input.len())
     }
 
-    pub fn delete_char(&mut self) {
+    fn delete_char(&mut self) {
         let is_not_cursor_leftmost = self.character_index != 0;
         if is_not_cursor_leftmost {
             // Method "remove" is not used on the saved text for deleting the selected char.
@@ -91,43 +95,40 @@ impl Input {
         }
     }
 
-    pub fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
+    fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
         new_cursor_pos.clamp(0, self.input.chars().count())
     }
 
-    pub const fn reset_cursor(&mut self) {
+    const fn reset_cursor(&mut self) {
         self.character_index = 0;
     }
 
-    // fn run(mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-    //     loop {
-    //         terminal.draw(|frame| self.render(frame))?;
-    //
-    //         if let Some(key) = event::read()?.as_key_press_event() {
-    //             match self.input_mode {
-    //                 InputMode::Normal => match key.code {
-    //                     KeyCode::Char('e') => {
-    //                         self.input_mode = InputMode::Editing;
-    //                     }
-    //                     KeyCode::Char('q') => {
-    //                         return Ok(());
-    //                     }
-    //                     _ => {}
-    //                 },
-    //                 InputMode::Editing if key.kind == KeyEventKind::Press => match key.code {
-    //                     KeyCode::Enter => self.submit_message(),
-    //                     KeyCode::Char(to_insert) => self.enter_char(to_insert),
-    //                     KeyCode::Backspace => self.delete_char(),
-    //                     KeyCode::Left => self.move_cursor_left(),
-    //                     KeyCode::Right => self.move_cursor_right(),
-    //                     KeyCode::Esc => self.input_mode = InputMode::Normal,
-    //                     _ => {}
-    //                 },
-    //                 InputMode::Editing => {}
-    //             }
-    //         }
-    //     }
-    // }
+    pub fn handler(&mut self, key: KeyEvent) {
+        match self.input_mode {
+            InputMode::Normal => match key.code {
+                KeyCode::Char('i') => {
+                    self.input_mode = InputMode::Editing;
+                }
+                KeyCode::Char('q') => {
+                    self.is_active = false;
+                    self.input = "".to_string();
+                }
+                _ => {}
+            },
+            InputMode::Editing => match key.code {
+                KeyCode::Enter => {
+                    self.is_active = false;
+                    self.input_mode = InputMode::Normal;
+                }
+                KeyCode::Char(to_insert) => self.enter_char(to_insert),
+                KeyCode::Backspace => self.delete_char(),
+                KeyCode::Left => self.move_cursor_left(),
+                KeyCode::Right => self.move_cursor_right(),
+                KeyCode::Esc => self.input_mode = InputMode::Normal,
+                _ => {}
+            },
+        }
+    }
 
     pub fn render(&self, frame: &mut Frame, area: Rect) {
         let layout = Layout::default()
