@@ -1,8 +1,5 @@
 use ratatui::Frame;
 use ratatui::layout::Alignment;
-use ratatui::layout::Constraint;
-use ratatui::layout::Direction;
-use ratatui::layout::Layout;
 use ratatui::style::Style;
 use ratatui::widgets::Block;
 use ratatui::widgets::BorderType;
@@ -33,15 +30,6 @@ impl DeletePopup {
 
         frame.render_widget(Clear, area);
 
-        let vertical = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Percentage(40),
-                Constraint::Length(5),
-                Constraint::Percentage(40),
-            ])
-            .split(area);
-
         let text = if self.with_data {
             "Delete With Data"
         } else {
@@ -58,6 +46,6 @@ impl DeletePopup {
                     .border_type(BorderType::Rounded),
             );
 
-        frame.render_widget(paragraph, vertical[1]);
+        frame.render_widget(paragraph, area);
     }
 }
