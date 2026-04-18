@@ -1,6 +1,7 @@
 use crate::theme::Theme;
 use crate::widgets::custome_tab::CustomeTabs;
 use crate::widgets::delete_popup::DeletePopup;
+use crate::widgets::file_picker::FilePicker;
 use crate::widgets::files_table::FilesTable;
 use crate::widgets::peers_table::PeersTable;
 use crate::widgets::torrent_actions::TorrentActions;
@@ -14,6 +15,7 @@ use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
 use crossterm::event::KeyEventKind;
 use crossterm::event::KeyModifiers;
+use dirs::home_dir;
 use ratatui::DefaultTerminal;
 use ratatui::Frame;
 use ratatui::layout::Constraint::Length;
@@ -125,6 +127,7 @@ pub struct App {
     bottom_pane: BottomPane,
     active_pane: Pane,
     popup: Option<PopUp>,
+    file_picker: FilePicker,
     theme: Theme,
 }
 
@@ -165,6 +168,7 @@ impl App {
                 files_table: FilesTable::new(),
                 peers_table: PeersTable::new(),
             },
+            file_picker: FilePicker::new(home_dir().unwrap().to_str().unwrap().to_string(), false),
             active_pane: Pane::Top,
             popup: None,
             running: true,
@@ -212,7 +216,7 @@ impl App {
         match self.popup.as_mut().unwrap() {
             PopUp::TorrentAction(ta) => ta.render(frame, &self.theme),
             PopUp::DeleteConfirmation(dc) => dc.render(frame, &self.theme),
-            _ => {}
+            PopUp::FilePicker => self.file_picker.render(frame, &self.theme),
         }
     }
 
@@ -302,7 +306,16 @@ impl App {
         }
     }
 
-    async fn handle_filepicker(&mut self, key: KeyEvent) {}
+    async fn handle_filepicker(&mut self, key: KeyEvent) {
+        if key.code == KeyCode::Char('q') {
+            self.popup = None;
+            return;
+        }
+
+        if self.file_picker.handler(key, &self.client).await {
+            self.popup = None;
+        }
+    }
 
     fn handle_top_pane(&mut self, key: KeyEvent) {
         match (key.code, key.modifiers) {
@@ -404,7 +417,12 @@ impl App {
         if self.top_table.state.selected().is_none() {
             return;
         };
+
         let selected_index = self.top_table.state.selected().unwrap();
+        if selected_index >= self.top_table.torrents.len() {
+            return;
+        }
+
         let selected_torrent = self.top_table.torrents.get(selected_index).unwrap();
 
         match self.bottom_tab.selected_tab().parse().unwrap() {
