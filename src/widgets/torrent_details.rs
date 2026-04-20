@@ -28,9 +28,9 @@ impl Details {
         match &self.torrent {
             Some(torrent) => {
                 let name = torrent.name.clone().unwrap_or_default();
-                let total_size = readable_size(torrent.total_size.unwrap_or(0));
-                let downloaded = readable_size(torrent.downloaded_ever.unwrap_or(0) as i64);
-                let uploaded = readable_size(torrent.uploaded_ever.unwrap_or(0));
+                let total_size = readable_size(torrent.total_size.unwrap_or(0) as u64);
+                let downloaded = readable_size(torrent.downloaded_ever.unwrap_or(0));
+                let uploaded = readable_size(torrent.uploaded_ever.unwrap_or(0) as u64);
                 let status = status_to_string(torrent.status.unwrap());
                 let progress = torrent.percent_done.unwrap_or(0.0) * 100.0;
                 let progress_str = format!("{progress:.1}%");

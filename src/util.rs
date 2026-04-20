@@ -122,7 +122,7 @@ pub fn round_to_2_decimals(value: f64) -> f64 {
     (value * 100.0).round() / 100.0
 }
 
-pub fn readable_size(size: i64) -> String {
+pub fn readable_size(size: u64) -> String {
     let size = size as f64;
     let kb = 1024.0;
     let mb = kb * 1024.0;

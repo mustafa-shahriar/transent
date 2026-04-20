@@ -5,5 +5,6 @@ pub mod files_table;
 pub mod input;
 pub mod peers_table;
 pub mod torrent_actions;
+pub mod torrent_adder;
 pub mod torrent_details;
 pub mod torrent_table;

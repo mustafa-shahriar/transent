@@ -5,6 +5,7 @@ use crate::widgets::file_picker::FilePicker;
 use crate::widgets::files_table::FilesTable;
 use crate::widgets::peers_table::PeersTable;
 use crate::widgets::torrent_actions::TorrentActions;
+use crate::widgets::torrent_adder::TorrentAdder;
 use crate::widgets::torrent_details::Details;
 use crate::widgets::torrent_table::TorrentTable;
 
@@ -109,6 +110,7 @@ pub enum PopUp {
     TorrentAction(TorrentActions),
     DeleteConfirmation(DeletePopup),
     FilePicker,
+    TorrentAdder(TorrentAdder),
 }
 
 pub struct BottomPane {
@@ -222,6 +224,7 @@ impl App {
             PopUp::TorrentAction(ta) => ta.render(frame, &self.theme),
             PopUp::DeleteConfirmation(dc) => dc.render(frame, &self.theme),
             PopUp::FilePicker => self.file_picker.render(frame, &self.theme),
+            PopUp::TorrentAdder(ta) => ta.render(frame, &self.theme),
         }
     }
 
@@ -243,6 +246,7 @@ impl App {
                 PopUp::DeleteConfirmation(_) => self.handle_popup_delete(key).await,
                 PopUp::TorrentAction(_) => self.handle_actions_menu(key).await,
                 PopUp::FilePicker => self.handle_filepicker(key).await,
+                PopUp::TorrentAdder(_) => self.handle_torrent_adder(key).await,
             }
             return;
         }
@@ -257,6 +261,23 @@ impl App {
         match self.active_pane {
             Pane::Top => self.handle_top_pane(key),
             Pane::Bottom => self.handle_bottom_pane(key),
+        }
+    }
+
+    async fn handle_torrent_adder(&mut self, key: KeyEvent) {
+        if let Some(PopUp::TorrentAdder(ta)) = self.popup.as_mut() {
+            let (close, torrent) = ta.handler(key);
+
+            if let Some(torrent) = torrent {
+                if let Err(e) = self.client.lock().await.torrent_add(torrent).await {
+                    eprintln!("Failed to add torrent: {:?}", e);
+                    std::process::exit(1);
+                }
+            }
+
+            if close {
+                self.popup = None;
+            }
         }
     }
 
@@ -312,8 +333,12 @@ impl App {
     }
 
     async fn handle_filepicker(&mut self, key: KeyEvent) {
-        if self.file_picker.handler(key, &self.client).await {
+        let (close, path) = self.file_picker.handler(key).await;
+        if close {
             self.popup = None;
+        }
+        if let Some(path) = path {
+            self.popup = Some(PopUp::TorrentAdder(TorrentAdder::new(path)));
         }
     }
 
@@ -423,19 +448,20 @@ impl App {
             return;
         }
 
-        let selected_torrent = self.top_table.torrents.get(selected_index).unwrap();
+        let sel_tor = self.top_table.torrents.get(selected_index).unwrap();
 
         match self.bottom_tab.selected_tab().parse().unwrap() {
             BottomTab::Files => {
-                let files = selected_torrent.files.clone().unwrap();
+                let files = sel_tor.files.clone().unwrap();
                 self.bottom_pane.files_table.files = files;
+                self.bottom_pane.files_table.priorities = sel_tor.priorities.clone().unwrap();
             }
             BottomTab::Peers => {
-                let peers = selected_torrent.peers.clone().unwrap();
+                let peers = sel_tor.peers.clone().unwrap();
                 self.bottom_pane.peers_table.peers = peers;
             }
             BottomTab::Details => {
-                self.bottom_pane.details_block.torrent = Some(selected_torrent.clone());
+                self.bottom_pane.details_block.torrent = Some(sel_tor.clone());
             }
         }
     }

@@ -11,7 +11,6 @@ use crossterm::event::KeyEvent;
 use ratatui::Frame;
 use ratatui::layout::Alignment;
 use ratatui::layout::Constraint;
-use ratatui::layout::Constraint::Length;
 use ratatui::layout::Constraint::Percentage;
 use ratatui::layout::Direction;
 use ratatui::layout::Layout;
@@ -25,18 +24,15 @@ use ratatui::widgets::Table;
 use ratatui::widgets::TableState;
 use std::fs::DirEntry;
 use std::path::Path;
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use transmission_rpc::types::TorrentAddArgs;
 
 pub struct FilePicker {
-    pub path: String,
-    pub entries: Vec<DirEntry>,
-    pub prev_states: Vec<TableState>,
+    path: String,
+    entries: Vec<DirEntry>,
+    prev_states: Vec<TableState>,
     state: TableState,
 
-    pub show_hidden: bool,
-    pub input: Input,
+    show_hidden: bool,
+    input: Input,
 }
 
 impl FilePicker {
@@ -102,7 +98,7 @@ impl FilePicker {
         }
     }
 
-    async fn select_entry(&mut self, client: &Arc<Mutex<transmission_rpc::TransClient>>) -> bool {
+    async fn select_entry(&mut self) -> (bool, Option<String>) {
         self.input.input = "".to_string();
         match self.state.selected() {
             Some(n) if n < self.entries.len() => {
@@ -116,15 +112,7 @@ impl FilePicker {
                 self.path = selected_path;
 
                 if self.path.ends_with(".torrent") {
-                    let mut t = TorrentAddArgs::default();
-                    t.files_unwanted = None;
-                    t.filename = Some(self.path.clone());
-                    let r = client.lock().await.torrent_add(t).await;
-                    match r {
-                        Ok(_) => return true,
-                        Err(_) => {}
-                    }
-                    return false;
+                    return (true, Some(self.path.clone()));
                 };
 
                 self.entries = get_entries(self.path.to_string(), self.show_hidden);
@@ -136,41 +124,31 @@ impl FilePicker {
             None => {}
             _ => {}
         }
-        false
+        (false, None)
     }
 
-    pub async fn handler(
-        &mut self,
-        key: KeyEvent,
-        client: &Arc<Mutex<transmission_rpc::TransClient>>,
-    ) -> bool {
+    pub async fn handler(&mut self, key: KeyEvent) -> (bool, Option<String>) {
         if self.input.is_active {
             self.input.handler(key);
             self.filter();
-            return false;
+            return (false, None);
         }
 
         match key.code {
             KeyCode::Char('j') => self.select_next(),
             KeyCode::Char('k') => self.select_prev(),
             KeyCode::Char('h') => self.go_back(),
-            KeyCode::Char('l') => return self.select_entry(client).await,
+            KeyCode::Char('l') => return self.select_entry().await,
             KeyCode::Char('/') => self.input.is_active = true,
-            KeyCode::Char('q') => return true,
+            KeyCode::Char('q') => return (true, None),
             _ => {}
         }
-        false
+        (false, None)
     }
 
     pub fn render(&mut self, frame: &mut Frame, theme: &Theme) {
         let area = centered_rect(50, 66, frame.area());
         frame.render_widget(Clear, area);
-
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .margin(1)
-            .constraints(vec![Percentage(80), Percentage(20)])
-            .split(area);
 
         let rows: Vec<Row> = self
             .entries
@@ -196,6 +174,12 @@ impl FilePicker {
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )
             .block(block);
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(1)
+            .constraints(vec![Percentage(80), Percentage(20)])
+            .split(area);
 
         if self.input.is_active {
             frame.render_stateful_widget(table, chunks[0], &mut self.state);
