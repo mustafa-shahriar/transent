@@ -26,7 +26,7 @@ pub struct Input {
     /// Position of cursor in the editor area.
     character_index: usize,
     /// Current input mode
-    input_mode: InputMode,
+    pub input_mode: InputMode,
     pub is_active: bool,
 }
 
@@ -99,7 +99,7 @@ impl Input {
         new_cursor_pos.clamp(0, self.input.chars().count())
     }
 
-    const fn reset_cursor(&mut self) {
+    pub const fn reset_cursor(&mut self) {
         self.character_index = 0;
     }
 
@@ -109,7 +109,7 @@ impl Input {
                 KeyCode::Char('i') => {
                     self.input_mode = InputMode::Editing;
                 }
-                KeyCode::Char('q') => {
+                KeyCode::Char('q') | KeyCode::Esc => {
                     self.is_active = false;
                     self.input = "".to_string();
                 }

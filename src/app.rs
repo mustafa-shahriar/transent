@@ -250,11 +250,11 @@ impl App {
             }
             return;
         }
-        if key.code.to_string() == "q" {
+        if key.code == KeyCode::Char('q') {
             self.running = false;
             return;
         }
-        if key.code.to_string() == "a" {
+        if key.code == KeyCode::Char('a') {
             self.popup = Some(PopUp::FilePicker);
             return;
         }
@@ -289,13 +289,15 @@ impl App {
                     self.popup = None;
                 }
             }
-            KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Char('q') => self.popup = None,
+            KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Char('q') | KeyCode::Esc => {
+                self.popup = None
+            }
             _ => {}
         }
     }
 
     async fn handle_actions_menu(&mut self, key: KeyEvent) {
-        if matches!(key.code, KeyCode::Char('q')) {
+        if matches!(key.code, KeyCode::Char('q') | KeyCode::Esc) {
             self.popup = None;
             return;
         }

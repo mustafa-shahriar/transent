@@ -5,6 +5,7 @@ use crate::util::fuzzy_match;
 use crate::util::get_entries;
 use crate::util::icon_for;
 use crate::widgets::input::Input;
+use crate::widgets::input::InputMode;
 
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
@@ -139,8 +140,12 @@ impl FilePicker {
             KeyCode::Char('k') => self.select_prev(),
             KeyCode::Char('h') => self.go_back(),
             KeyCode::Char('l') => return self.select_entry().await,
-            KeyCode::Char('/') => self.input.is_active = true,
-            KeyCode::Char('q') => return (true, None),
+            KeyCode::Char('/') => {
+                self.input.is_active = true;
+                self.input.input_mode = InputMode::Editing;
+                self.input.reset_cursor();
+            }
+            KeyCode::Char('q') | KeyCode::Esc => return (true, None),
             _ => {}
         }
         (false, None)
