@@ -259,7 +259,7 @@ impl App {
             return;
         }
         match self.active_pane {
-            Pane::Top => self.handle_top_pane(key),
+            Pane::Top => self.handle_top_pane(key).await,
             Pane::Bottom => self.handle_bottom_pane(key),
         }
     }
@@ -342,7 +342,7 @@ impl App {
         }
     }
 
-    fn handle_top_pane(&mut self, key: KeyEvent) {
+    async fn handle_top_pane(&mut self, key: KeyEvent) {
         match (key.code, key.modifiers) {
             (KeyCode::Char('j'), m) if m.contains(KeyModifiers::CONTROL) => {
                 self.active_pane = Pane::Bottom;
@@ -381,6 +381,24 @@ impl App {
                 let name = t.name.clone().unwrap();
                 let popup = PopUp::DeleteConfirmation(DeletePopup::new(id, name, false));
                 self.popup = Some(popup);
+            }
+            (KeyCode::Char('p'), _) => {
+                let index = self.top_table.state.selected();
+                if index.is_none() {
+                    return;
+                }
+                let t = self.top_table.torrents.get(index.unwrap()).unwrap();
+                let id = t.id().unwrap();
+                self.pause(id).await;
+            }
+            (KeyCode::Char('r'), _) => {
+                let index = self.top_table.state.selected();
+                if index.is_none() {
+                    return;
+                }
+                let t = self.top_table.torrents.get(index.unwrap()).unwrap();
+                let id = t.id().unwrap();
+                self.resume(id).await;
             }
             (KeyCode::Char('j'), _) => {
                 self.top_table.select_next();
