@@ -103,19 +103,19 @@ impl FilePicker {
         self.input.input = "".to_string();
         match self.state.selected() {
             Some(n) if n < self.entries.len() => {
-                self.prev_states.push(self.state.clone());
-                let selected_path = self.entries[n]
+                let path = self.entries[n]
                     .path()
                     .canonicalize()
                     .unwrap()
                     .display()
                     .to_string();
-                self.path = selected_path;
 
-                if self.path.ends_with(".torrent") {
-                    return (true, Some(self.path.clone()));
-                };
+                if path.ends_with(".torrent") {
+                    return (true, Some(path));
+                }
 
+                self.prev_states.push(self.state.clone());
+                self.path = path;
                 self.entries = get_entries(self.path.to_string(), self.show_hidden);
                 match self.entries.len() {
                     0 => self.state.select(None),
