@@ -44,9 +44,6 @@ rpc_url = "transmission-daemon url with password"
 
 ```
 
-```
-~/.config/transent/
-```
 ### Theme (`theme.toml`)
 
 ```toml
