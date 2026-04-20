@@ -3,9 +3,9 @@ use ratatui::layout::Constraint;
 use ratatui::layout::Rect;
 use ratatui::style::Style;
 use ratatui::style::Stylize;
+use ratatui::widgets::Row;
 use ratatui::widgets::Table;
 use ratatui::widgets::TableState;
-use ratatui::widgets::Row;
 use transmission_rpc::types::Peer;
 
 use crate::theme::Theme;
@@ -23,7 +23,7 @@ impl PeersTable {
             state: TableState::default(),
         }
     }
-    
+
     pub fn render(&mut self, frame: &mut Frame, area: Rect, theme: &Theme) {
         let header = Row::new(["Adress", "Client", "Download Speed", "Upload Speed"])
             .style(Style::new().bold());
