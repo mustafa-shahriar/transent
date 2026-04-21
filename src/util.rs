@@ -99,6 +99,43 @@ pub fn fuzzy_match(text: &str, query: &str) -> bool {
     false
 }
 
+/// Calculate a match score for ranking fuzzy matches.
+/// Higher scores indicate better matches.
+pub fn calculate_match_score(text: &str, query: &str) -> usize {
+    let mut score = 0;
+    let mut query_chars = query.chars().peekable();
+    let mut last_match_pos = 0;
+
+    for (pos, c) in text.chars().enumerate() {
+        if let Some(&query_char) = query_chars.peek() {
+            if c == query_char {
+                query_chars.next();
+
+                // Bonus for consecutive matches
+                if pos == last_match_pos + 1 {
+                    score += 10; // Bonus for consecutive character match
+                } else {
+                    score += 5; // Base score for a match
+                }
+
+                // Bonus for matches at the start of the string
+                if pos == 0 {
+                    score += 20;
+                }
+
+                last_match_pos = pos;
+            }
+        }
+    }
+
+    // Bonus for completing the entire query
+    if query_chars.peek().is_none() {
+        score += 50;
+    }
+
+    score
+}
+
 pub fn readabl_eta(eta: i64) -> String {
     if eta < 0 {
         return "∞".to_string();

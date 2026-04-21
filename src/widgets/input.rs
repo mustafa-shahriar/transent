@@ -1,5 +1,6 @@
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
+use crossterm::event::KeyModifiers;
 use ratatui::Frame;
 
 use ratatui::layout::Constraint;
@@ -55,6 +56,10 @@ impl Input {
         self.character_index = self.clamp_cursor(cursor_moved_right);
     }
 
+    fn move_cursor_to_end(&mut self) {
+        self.character_index = self.input.chars().count();
+    }
+
     fn enter_char(&mut self, new_char: char) {
         let index = self.byte_index();
         self.input.insert(index, new_char);
@@ -95,6 +100,31 @@ impl Input {
         }
     }
 
+    fn delete_word(&mut self) {
+        if self.character_index == 0 {
+            return;
+        }
+
+        let chars: Vec<char> = self.input.chars().collect();
+        let mut end_pos = self.character_index;
+
+        // Move backwards to the end of the word
+        while end_pos > 0 && chars[end_pos - 1] == ' ' {
+            end_pos -= 1;
+        }
+
+        // Move backwards to the start of the word
+        while end_pos > 0 && chars[end_pos - 1] != ' ' {
+            end_pos -= 1;
+        }
+
+        // Delete characters from end_pos to character_index
+        let before = chars[..end_pos].iter().collect::<String>();
+        let after = chars[self.character_index..].iter().collect::<String>();
+        self.input = before + &after;
+        self.character_index = end_pos;
+    }
+
     fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
         new_cursor_pos.clamp(0, self.input.chars().count())
     }
@@ -109,8 +139,27 @@ impl Input {
                 KeyCode::Char('i') => {
                     self.input_mode = InputMode::Editing;
                 }
+                KeyCode::Char('A') => {
+                    self.move_cursor_to_end();
+                    self.input_mode = InputMode::Editing;
+                }
+                KeyCode::Char('a') => {
+                    self.move_cursor_right();
+                    self.input_mode = InputMode::Editing;
+                }
+                KeyCode::Char('h') => {
+                    self.move_cursor_left();
+                }
+                KeyCode::Char('l') => {
+                    self.move_cursor_right();
+                }
                 KeyCode::Char('q') | KeyCode::Esc => {
                     self.is_active = false;
+                    self.input = "".to_string();
+                }
+                KeyCode::Enter => {
+                    self.is_active = false;
+                    self.input_mode = InputMode::Normal;
                     self.input = "".to_string();
                 }
                 _ => {}
@@ -119,6 +168,10 @@ impl Input {
                 KeyCode::Enter => {
                     self.is_active = false;
                     self.input_mode = InputMode::Normal;
+                    self.input = "".to_string();
+                }
+                KeyCode::Char('w') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    self.delete_word()
                 }
                 KeyCode::Char(to_insert) => self.enter_char(to_insert),
                 KeyCode::Backspace => self.delete_char(),
@@ -140,12 +193,14 @@ impl Input {
             InputMode::Normal => (
                 vec![
                     "Press ".into(),
-                    "q".bold(),
-                    " to exit, ".into(),
                     "i".bold(),
-                    " to start editing.".bold(),
+                    " to edit, ".into(),
+                    "Enter".bold(),
+                    " to record the message, ".into(),
+                    "Esc".bold(),
+                    " to exit.".into(),
                 ],
-                Style::default().add_modifier(Modifier::RAPID_BLINK),
+                Style::default(),
             ),
             InputMode::Editing => (
                 vec![
@@ -164,14 +219,20 @@ impl Input {
 
         let input = Paragraph::new(self.input.as_str())
             .style(match self.input_mode {
-                InputMode::Normal => Style::default(),
+                InputMode::Normal => Style::default().fg(Color::Cyan),
                 InputMode::Editing => Style::default().fg(Color::Yellow),
             })
             .block(Block::bordered().title("Input"));
         frame.render_widget(input, layout[1]);
         match self.input_mode {
-            // Hide the cursor. `Frame` does this by default, so we don't need to do anything here
-            InputMode::Normal => {}
+            // Show a bar cursor in Normal mode
+            #[expect(clippy::cast_possible_truncation)]
+            InputMode::Normal => {
+                frame.set_cursor_position(Position::new(
+                    layout[1].x + self.character_index as u16 + 1,
+                    layout[1].y + 1,
+                ));
+            }
 
             // Make the cursor visible and ask ratatui to put it at the specified coordinates after
             // rendering

@@ -1,4 +1,5 @@
 use crate::theme::Theme;
+use crate::util::calculate_match_score;
 use crate::util::centered_rect;
 use crate::util::expand_path;
 use crate::util::fuzzy_match;
@@ -49,20 +50,37 @@ impl FilePicker {
         }
     }
 
-    fn filter(&mut self) {
+    fn select_best_match(&mut self) {
         if !self.input.is_active {
             return;
         }
 
         let input = self.input.input.to_lowercase();
-        let entries = get_entries(self.path.to_string(), self.show_hidden);
-        self.entries = entries
-            .into_iter()
-            .filter(|entry| {
-                let name = entry.file_name().to_string_lossy().to_lowercase();
-                fuzzy_match(&name, &input)
-            })
-            .collect();
+
+        if input.is_empty() {
+            self.state.select(Some(0));
+            return;
+        }
+
+        // Find the best matching entry based on fuzzy match
+        let mut best_index: Option<usize> = None;
+        let mut best_score = 0;
+
+        for (index, entry) in self.entries.iter().enumerate() {
+            let name = entry.file_name().to_string_lossy().to_lowercase();
+            if fuzzy_match(&name, &input) {
+                // Score based on how early the match starts and match length
+                let score = calculate_match_score(&name, &input);
+                if score > best_score {
+                    best_score = score;
+                    best_index = Some(index);
+                }
+            }
+        }
+
+        if let Some(index) = best_index {
+            self.state.select(Some(index));
+        }
     }
 
     fn select_next(&mut self) {
@@ -131,7 +149,7 @@ impl FilePicker {
     pub async fn handler(&mut self, key: KeyEvent) -> (bool, Option<String>) {
         if self.input.is_active {
             self.input.handler(key);
-            self.filter();
+            self.select_best_match();
             return (false, None);
         }
 
