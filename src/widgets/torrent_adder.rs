@@ -242,7 +242,7 @@ impl TorrentAdder {
             .map(|(i, entry)| {
                 let is_focused = i == selected_idx;
 
-                let checkbox = if entry.selected { " ✓ " } else { "   " };
+                let checkbox = if entry.selected { "  " } else { "  " };
 
                 let row_style = if is_focused {
                     Style::default()

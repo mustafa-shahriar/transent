@@ -61,6 +61,10 @@ highlight = "#f7768e"
 [table]
 row_highlight_fg = "#24283b"
 row_highlight_bg = "#7aa2f7"
+
+[progress_bar]
+filled = "#7aa2f7"
+empty  = "#24283b"
 ```
 
 ## License

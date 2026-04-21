@@ -424,12 +424,22 @@ impl App {
                 self.active_pane = Pane::Top;
                 self.bottom_tab.is_focused = false;
                 self.top_tab.is_focused = true;
+                return;
             }
             (KeyCode::Char('l'), _) => {
                 self.bottom_tab.select_next();
+                return;
             }
             (KeyCode::Char('h'), _) => {
                 self.bottom_tab.select_prev();
+                return;
+            }
+            _ => {}
+        }
+
+        match self.bottom_tab.selected_tab().parse().unwrap() {
+            BottomTab::Files => {
+                self.bottom_pane.files_table.handle_key(key);
             }
             _ => {}
         }
@@ -475,6 +485,7 @@ impl App {
                 let files = sel_tor.files.clone().unwrap();
                 self.bottom_pane.files_table.files = files;
                 self.bottom_pane.files_table.priorities = sel_tor.priorities.clone().unwrap();
+                self.bottom_pane.files_table.wanted = sel_tor.wanted.clone().unwrap();
             }
             BottomTab::Peers => {
                 let peers = sel_tor.peers.clone().unwrap();

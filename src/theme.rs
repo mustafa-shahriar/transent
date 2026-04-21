@@ -6,6 +6,7 @@ pub struct Theme {
     pub general: General,
     pub tabs: Tabs,
     pub table: TableTheme,
+    pub progress_bar: ProgressBar,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -26,6 +27,12 @@ pub struct Tabs {
 pub struct TableTheme {
     pub row_highlight_fg: String,
     pub row_highlight_bg: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ProgressBar {
+    pub filled: String,
+    pub empty: String,
 }
 
 impl Theme {
