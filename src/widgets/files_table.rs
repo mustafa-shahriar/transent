@@ -5,6 +5,8 @@ use ratatui::layout::Rect;
 use ratatui::style::{Color, Style, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Cell, Row, Table, TableState};
+use transmission_rpc::types::Id;
+use transmission_rpc::types::TorrentSetArgs;
 use transmission_rpc::types::{File, Priority};
 
 use crate::theme::Theme;
@@ -70,55 +72,62 @@ impl FilesTable {
 
     // ── Actions ───────────────────────────────────────────────────────────────
 
-    pub fn toggle_wanted(&mut self) {
+    pub fn toggle_wanted(&mut self) -> Option<TorrentSetArgs> {
         if let Some(i) = self.state.selected() {
-            if let Some(w) = self.wanted.get_mut(i) {
-                *w = !*w;
+            if let Some(w) = self.wanted.get(i) {
+                let tsa = TorrentSetArgs::new();
+                if *w {
+                    return Some(tsa.files_unwanted(vec![i]));
+                } else {
+                    return Some(tsa.files_wanted(vec![i]));
+                }
             }
         }
+        None
     }
 
-    pub fn cycle_priority(&mut self) {
+    pub fn cycle_priority(&mut self) -> Option<TorrentSetArgs> {
         if let Some(i) = self.state.selected() {
             if let Some(p) = self.priorities.get_mut(i) {
-                *p = match p {
-                    Priority::Low => Priority::Normal,
-                    Priority::Normal => Priority::High,
-                    Priority::High => Priority::Low,
+                let tsa = TorrentSetArgs::new();
+                let tsa = match p {
+                    Priority::Low => tsa.priority_normal(vec![i]),
+                    Priority::Normal => tsa.priority_high(vec![i]),
+                    Priority::High => tsa.priority_low(vec![i]),
                 };
+                return Some(tsa);
             }
         }
+        None
     }
 
     // ── Key handler ───────────────────────────────────────────────────────────
 
-    pub fn handle_key(&mut self, key: KeyEvent) -> bool {
+    pub fn handler(&mut self, key: KeyEvent) -> Option<TorrentSetArgs> {
         match key.code {
             KeyCode::Down | KeyCode::Char('j') => {
                 self.select_next();
-                true
+                None
             }
             KeyCode::Up | KeyCode::Char('k') => {
                 self.select_prev();
-                true
+                None
             }
             KeyCode::Home | KeyCode::Char('g') => {
                 self.select_first();
-                true
+                None
             }
             KeyCode::End | KeyCode::Char('G') => {
                 self.select_last();
-                true
+                None
             }
             KeyCode::Char(' ') => {
-                self.toggle_wanted();
-                true
+                return self.toggle_wanted();
             }
             KeyCode::Char('p') => {
-                self.cycle_priority();
-                true
+                return self.cycle_priority();
             }
-            _ => false,
+            _ => None,
         }
     }
 

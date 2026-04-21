@@ -260,7 +260,7 @@ impl App {
         }
         match self.active_pane {
             Pane::Top => self.handle_top_pane(key).await,
-            Pane::Bottom => self.handle_bottom_pane(key),
+            Pane::Bottom => self.handle_bottom_pane(key).await,
         }
     }
 
@@ -418,7 +418,7 @@ impl App {
         }
     }
 
-    fn handle_bottom_pane(&mut self, key: KeyEvent) {
+    async fn handle_bottom_pane(&mut self, key: KeyEvent) {
         match (key.code, key.modifiers) {
             (KeyCode::Char('k'), m) if m.contains(KeyModifiers::CONTROL) => {
                 self.active_pane = Pane::Top;
@@ -439,7 +439,18 @@ impl App {
 
         match self.bottom_tab.selected_tab().parse().unwrap() {
             BottomTab::Files => {
-                self.bottom_pane.files_table.handle_key(key);
+                if let Some(tsa) = self.bottom_pane.files_table.handler(key) {
+                    let index = self.top_table.state.selected();
+                    if index.is_none() {
+                        return;
+                    }
+                    let t = self.top_table.torrents.get(index.unwrap()).unwrap();
+                    let id = t.id().unwrap();
+                    let client = self.client.clone();
+                    tokio::spawn(async move {
+                        let _ = client.lock().await.torrent_set(tsa, Some(vec![id])).await;
+                    });
+                }
             }
             _ => {}
         }
