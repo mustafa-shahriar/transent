@@ -5,7 +5,6 @@ use ratatui::layout::Rect;
 use ratatui::style::{Color, Style, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Cell, Row, Table, TableState};
-use transmission_rpc::types::Id;
 use transmission_rpc::types::TorrentSetArgs;
 use transmission_rpc::types::{File, Priority};
 
@@ -36,10 +35,6 @@ impl FilesTable {
             wanted: vec![],
             state: TableState::default(),
         }
-    }
-
-    pub fn sync(&mut self) {
-        self.wanted.resize(self.files.len(), true);
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -162,9 +157,12 @@ impl FilesTable {
                     Theme::color(&theme.progress_bar.empty),
                 ));
 
+                let name: Vec<&str> = file.name.split_terminator('/').collect();
+                let name = name.get(name.len() - 1).unwrap().to_string();
+
                 let row = Row::new([
                     Cell::from(checkbox),
-                    Cell::from(file.name.clone()),
+                    Cell::from(name),
                     Cell::from(size),
                     progress_cell,
                     Cell::from(priority),
