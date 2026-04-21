@@ -1,3 +1,4 @@
+use color_eyre::owo_colors::OwoColorize;
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
 use crossterm::event::KeyModifiers;
@@ -9,8 +10,6 @@ use ratatui::layout::Layout;
 use ratatui::layout::Position;
 use ratatui::layout::Rect;
 
-use ratatui::style::Color;
-use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::style::Stylize;
 
@@ -19,6 +18,8 @@ use ratatui::text::Text;
 
 use ratatui::widgets::Block;
 use ratatui::widgets::Paragraph;
+
+use crate::theme::Theme;
 
 /// App holds the state of the application
 pub struct Input {
@@ -183,47 +184,48 @@ impl Input {
         }
     }
 
-    pub fn render(&self, frame: &mut Frame, area: Rect) {
+    pub fn render(&self, frame: &mut Frame, area: Rect, theme: &Theme) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vec![Constraint::Length(1), Constraint::Length(3)])
             .split(area);
 
-        let (msg, style) = match self.input_mode {
-            InputMode::Normal => (
-                vec![
-                    "Press ".into(),
-                    "i".bold(),
-                    " to edit, ".into(),
-                    "Enter".bold(),
-                    " to record the message, ".into(),
-                    "Esc".bold(),
-                    " to exit.".into(),
-                ],
-                Style::default(),
-            ),
-            InputMode::Editing => (
-                vec![
-                    "Press ".into(),
-                    "Esc".bold(),
-                    " to stop editing, ".into(),
-                    "Enter".bold(),
-                    " to record the message".into(),
-                ],
-                Style::default(),
-            ),
+        let style = Style::default()
+            .fg(Theme::color(&theme.general.foreground))
+            .bg(Theme::color(&theme.general.background));
+
+        let msg = match self.input_mode {
+            InputMode::Normal => vec![
+                "Press ".into(),
+                "i".bold(),
+                " to edit, ".into(),
+                "Enter".bold(),
+                " to record the message, ".into(),
+                "Esc".bold(),
+                " to exit.".into(),
+            ],
+            InputMode::Editing => vec![
+                "Press ".into(),
+                "Esc".bold(),
+                " to stop editing, ".into(),
+                "Enter".bold(),
+                " to record the message".into(),
+            ],
         };
-        let text = Text::from(Line::from(msg)).patch_style(style);
+
+        let text = Text::from(Line::from(msg)).style(style);
         let help_message = Paragraph::new(text);
         frame.render_widget(help_message, layout[0]);
 
-        let input = Paragraph::new(self.input.as_str())
-            .style(match self.input_mode {
-                InputMode::Normal => Style::default().fg(Color::Cyan),
-                InputMode::Editing => Style::default().fg(Color::Yellow),
-            })
-            .block(Block::bordered().title("Input"));
+        let input =
+            Paragraph::new(self.input.as_str())
+                .style(style)
+                .block(Block::bordered().title(match self.input_mode {
+                    InputMode::Editing => "Insert mode",
+                    InputMode::Normal => "Normal mode",
+                }));
         frame.render_widget(input, layout[1]);
+
         match self.input_mode {
             // Show a bar cursor in Normal mode
             #[expect(clippy::cast_possible_truncation)]

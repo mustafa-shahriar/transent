@@ -206,7 +206,7 @@ impl FilePicker {
 
         if self.input.is_active {
             frame.render_stateful_widget(table, chunks[0], &mut self.state);
-            self.input.render(frame, chunks[1]);
+            self.input.render(frame, chunks[1], theme);
         } else {
             frame.render_stateful_widget(table, area, &mut self.state);
         }
