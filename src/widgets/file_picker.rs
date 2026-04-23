@@ -170,8 +170,7 @@ impl FilePicker {
     }
 
     pub fn render(&mut self, frame: &mut Frame, theme: &Theme) {
-        let area = centered_rect(50, 66, frame.area());
-        frame.render_widget(Clear, area);
+        let area = centered_rect(50, 75, frame.area());
 
         let rows: Vec<Row> = self
             .entries
@@ -198,15 +197,18 @@ impl FilePicker {
             )
             .block(block);
 
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![Percentage(80), Percentage(20)])
+            .split(area);
+
         if self.input.is_active {
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints(vec![Percentage(80), Percentage(20)])
-                .split(area);
+            frame.render_widget(Clear, area);
             frame.render_stateful_widget(table, chunks[0], &mut self.state);
             self.input.render(frame, chunks[1], theme);
         } else {
-            frame.render_stateful_widget(table, area, &mut self.state);
+            frame.render_widget(Clear, chunks[0]);
+            frame.render_stateful_widget(table, chunks[0], &mut self.state);
         }
     }
 }
