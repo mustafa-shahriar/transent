@@ -198,13 +198,11 @@ impl FilePicker {
             )
             .block(block);
 
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .margin(1)
-            .constraints(vec![Percentage(80), Percentage(20)])
-            .split(area);
-
         if self.input.is_active {
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(vec![Percentage(80), Percentage(20)])
+                .split(area);
             frame.render_stateful_widget(table, chunks[0], &mut self.state);
             self.input.render(frame, chunks[1], theme);
         } else {
