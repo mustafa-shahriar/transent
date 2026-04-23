@@ -268,11 +268,11 @@ impl App {
         if let Some(PopUp::TorrentAdder(ta)) = self.popup.as_mut() {
             let (close, torrent) = ta.handler(key);
 
-            if let Some(torrent) = torrent {
-                if let Err(e) = self.client.lock().await.torrent_add(torrent).await {
-                    eprintln!("Failed to add torrent: {:?}", e);
-                    std::process::exit(1);
-                }
+            if let Some(torrent) = torrent
+                && let Err(e) = self.client.lock().await.torrent_add(torrent).await
+            {
+                eprintln!("Failed to add torrent: {:?}", e);
+                std::process::exit(1);
             }
 
             if close {
@@ -437,22 +437,19 @@ impl App {
             _ => {}
         }
 
-        match self.bottom_tab.selected_tab().parse().unwrap() {
-            BottomTab::Files => {
-                if let Some(tsa) = self.bottom_pane.files_table.handler(key) {
-                    let index = self.top_table.state.selected();
-                    if index.is_none() {
-                        return;
-                    }
-                    let t = self.top_table.torrents.get(index.unwrap()).unwrap();
-                    let id = t.id().unwrap();
-                    let client = self.client.clone();
-                    tokio::spawn(async move {
-                        let _ = client.lock().await.torrent_set(tsa, Some(vec![id])).await;
-                    });
-                }
+        if BottomTab::Files == self.bottom_tab.selected_tab().parse().unwrap()
+            && let Some(tsa) = self.bottom_pane.files_table.handler(key)
+        {
+            let index = self.top_table.state.selected();
+            if index.is_none() {
+                return;
             }
-            _ => {}
+            let t = self.top_table.torrents.get(index.unwrap()).unwrap();
+            let id = t.id().unwrap();
+            let client = self.client.clone();
+            tokio::spawn(async move {
+                let _ = client.lock().await.torrent_set(tsa, Some(vec![id])).await;
+            });
         }
     }
 

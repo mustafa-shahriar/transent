@@ -70,8 +70,10 @@ impl TorrentAdder {
                 (false, None)
             }
             KeyCode::Enter => {
-                let mut t = TorrentAddArgs::default();
-                t.filename = Some(self.path.to_string());
+                let mut t = TorrentAddArgs {
+                    filename: Some(self.path.to_string()),
+                    ..Default::default()
+                };
 
                 let unwanted: Vec<i32> = self
                     .entries
@@ -165,27 +167,27 @@ impl TorrentAdder {
 
     pub fn prev(&mut self) {
         match self.state.selected() {
-            Some(n) if n <= 0 => self.state.select(Some(self.entries.len() - 1)),
+            Some(0) => self.state.select(Some(self.entries.len() - 1)),
             _ => self.state.select_previous(),
         }
     }
 
     pub fn toggle_selected(&mut self) {
-        if let Some(i) = self.state.selected() {
-            if let Some(entry) = self.entries.get_mut(i) {
-                entry.selected = !entry.selected;
-            }
+        if let Some(i) = self.state.selected()
+            && let Some(entry) = self.entries.get_mut(i)
+        {
+            entry.selected = !entry.selected;
         }
     }
 
     pub fn cycle_priority(&mut self) {
-        if let Some(i) = self.state.selected() {
-            if let Some(entry) = self.entries.get_mut(i) {
-                entry.priority = match entry.priority {
-                    Priority::Low => Priority::Normal,
-                    Priority::Normal => Priority::High,
-                    Priority::High => Priority::Low,
-                }
+        if let Some(i) = self.state.selected()
+            && let Some(entry) = self.entries.get_mut(i)
+        {
+            entry.priority = match entry.priority {
+                Priority::Low => Priority::Normal,
+                Priority::Normal => Priority::High,
+                Priority::High => Priority::Low,
             }
         }
     }

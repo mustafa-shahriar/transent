@@ -1,11 +1,11 @@
 use crate::theme::Theme;
 use ratatui::Frame;
 use ratatui::layout::Rect;
+use ratatui::style::Modifier;
+use ratatui::style::Style;
 use ratatui::widgets::Block;
 use ratatui::widgets::Borders;
 use ratatui::widgets::Tabs;
-use ratatui::style::Modifier;
-use ratatui::style::Style;
 
 pub struct CustomeTabs {
     titles: Vec<String>,

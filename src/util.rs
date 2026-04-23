@@ -43,12 +43,11 @@ pub fn get_theme() -> Theme {
 
 pub fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {
     let p = path.as_ref();
-    if let Some(str_path) = p.to_str() {
-        if let Some(home) = home_dir() {
-            if str_path.starts_with("~/") {
-                return home.join(&str_path[2..]);
-            }
-        }
+    if let Some(str_path) = p.to_str()
+        && let Some(home) = home_dir()
+        && let Some(stripped) = str_path.strip_prefix("~/")
+    {
+        return home.join(stripped);
     }
     p.to_path_buf()
 }
@@ -137,24 +136,24 @@ pub fn calculate_match_score(text: &str, query: &str) -> usize {
     let mut last_match_pos = 0;
 
     for (pos, c) in text.chars().enumerate() {
-        if let Some(&query_char) = query_chars.peek() {
-            if c == query_char {
-                query_chars.next();
+        if let Some(&query_char) = query_chars.peek()
+            && c == query_char
+        {
+            query_chars.next();
 
-                // Bonus for consecutive matches
-                if pos == last_match_pos + 1 {
-                    score += 10; // Bonus for consecutive character match
-                } else {
-                    score += 5; // Base score for a match
-                }
-
-                // Bonus for matches at the start of the string
-                if pos == 0 {
-                    score += 20;
-                }
-
-                last_match_pos = pos;
+            // Bonus for consecutive matches
+            if pos == last_match_pos + 1 {
+                score += 10; // Bonus for consecutive character match
+            } else {
+                score += 5; // Base score for a match
             }
+
+            // Bonus for matches at the start of the string
+            if pos == 0 {
+                score += 20;
+            }
+
+            last_match_pos = pos;
         }
     }
 
@@ -200,7 +199,7 @@ pub fn readable_size(size: u64) -> String {
     } else if size >= mb {
         return round_to_2_decimals(size / mb).to_string() + " MB";
     }
-    return round_to_2_decimals(size).to_string() + " KB";
+    round_to_2_decimals(size).to_string() + " KB"
 }
 
 pub fn status_to_string(status: TorrentStatus) -> String {
@@ -214,7 +213,7 @@ pub fn status_to_string(status: TorrentStatus) -> String {
         TorrentStatus::Seeding => "Seeding",
     };
 
-    return s.to_string();
+    s.to_string()
 }
 
 pub fn readble_speed(byte: i64) -> String {
@@ -231,7 +230,7 @@ pub fn readble_speed(byte: i64) -> String {
         return round_to_2_decimals(byte / kilo_byte).to_string() + " KB/s";
     }
 
-    return round_to_2_decimals(byte).to_string() + " B/s";
+    round_to_2_decimals(byte).to_string() + " B/s"
 }
 
 pub fn get_conf_dir() -> PathBuf {

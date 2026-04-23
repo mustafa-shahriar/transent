@@ -92,7 +92,7 @@ impl FilePicker {
 
     fn select_prev(&mut self) {
         match self.state.selected() {
-            Some(n) if n <= 0 => self.state.select(Some(self.entries.len() - 1)),
+            Some(0) => self.state.select(Some(self.entries.len() - 1)),
             _ => self.state.select_previous(),
         }
     }
@@ -100,20 +100,21 @@ impl FilePicker {
     fn go_back(&mut self) {
         self.input.input = "".to_string();
         let path = Path::new(&self.path).to_path_buf();
-        match path.parent() {
-            Some(parent) => {
-                self.path = parent.display().to_string();
-                self.entries = get_entries(self.path.clone(), false);
-                if !self.prev_states.is_empty() {
-                    self.state = self.prev_states.pop().unwrap();
-                }
-                let index = self
-                    .entries
-                    .iter()
-                    .position(|el| el.path().to_str().unwrap() == path.to_str().unwrap());
-                self.state.select(index);
+
+        if let Some(parent) = path.parent() {
+            self.path = parent.display().to_string();
+            self.entries = get_entries(self.path.clone(), false);
+
+            if !self.prev_states.is_empty() {
+                self.state = self.prev_states.pop().unwrap();
             }
-            None => {}
+
+            let index = self
+                .entries
+                .iter()
+                .position(|el| el.path().to_str().unwrap() == path.to_str().unwrap());
+
+            self.state.select(index);
         }
     }
 
@@ -176,7 +177,7 @@ impl FilePicker {
             .entries
             .iter()
             .map(|entry| {
-                Row::new([icon_for(entry).to_string() + entry.file_name().to_str().take().unwrap()])
+                Row::new([icon_for(entry).to_string() + entry.file_name().to_str().unwrap()])
             })
             .collect();
         let widths = [Constraint::Percentage(100)];

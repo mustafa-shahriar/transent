@@ -39,7 +39,7 @@ impl TorrentActions {
 
     pub fn select_prev(&mut self) {
         match self.state.selected() {
-            Some(n) if n <= 0 => self.state.select(Some(ACTIONS_STR.len() - 1)),
+            Some(0) => self.state.select(Some(ACTIONS_STR.len() - 1)),
             _ => self.state.select_previous(),
         }
     }

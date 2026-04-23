@@ -5,12 +5,12 @@ use ratatui::layout::Layout;
 use ratatui::layout::Rect;
 use ratatui::style::Style;
 use ratatui::style::Stylize;
+use ratatui::widgets::Row;
 use ratatui::widgets::Scrollbar;
 use ratatui::widgets::ScrollbarOrientation;
 use ratatui::widgets::ScrollbarState;
 use ratatui::widgets::Table;
 use ratatui::widgets::TableState;
-use ratatui::widgets::Row;
 use transmission_rpc::types::Torrent;
 
 use crate::theme::Theme;
@@ -34,7 +34,7 @@ impl TorrentTable {
 
     pub fn select_prev(&mut self) {
         match self.state.selected() {
-            Some(n) if n <= 0 => self.state.select(Some(self.torrents.len() - 1)),
+            Some(0) => self.state.select(Some(self.torrents.len() - 1)),
             _ => self.state.select_previous(),
         }
     }

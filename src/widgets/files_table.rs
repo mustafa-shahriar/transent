@@ -48,7 +48,7 @@ impl FilesTable {
 
     pub fn select_prev(&mut self) {
         match self.state.selected() {
-            Some(n) if n <= 0 => self.state.select(Some(self.files.len() - 1)),
+            Some(0) => self.state.select(Some(self.files.len() - 1)),
             _ => self.state.select_previous(),
         }
     }
@@ -68,30 +68,30 @@ impl FilesTable {
     // ── Actions ───────────────────────────────────────────────────────────────
 
     pub fn toggle_wanted(&mut self) -> Option<TorrentSetArgs> {
-        if let Some(i) = self.state.selected() {
-            if let Some(w) = self.wanted.get(i) {
-                let tsa = TorrentSetArgs::new();
-                if *w {
-                    return Some(tsa.files_unwanted(vec![i]));
-                } else {
-                    return Some(tsa.files_wanted(vec![i]));
-                }
+        if let Some(i) = self.state.selected()
+            && let Some(w) = self.wanted.get(i)
+        {
+            let tsa = TorrentSetArgs::new();
+            if *w {
+                return Some(tsa.files_unwanted(vec![i]));
+            } else {
+                return Some(tsa.files_wanted(vec![i]));
             }
         }
         None
     }
 
     pub fn cycle_priority(&mut self) -> Option<TorrentSetArgs> {
-        if let Some(i) = self.state.selected() {
-            if let Some(p) = self.priorities.get_mut(i) {
-                let tsa = TorrentSetArgs::new();
-                let tsa = match p {
-                    Priority::Low => tsa.priority_normal(vec![i]),
-                    Priority::Normal => tsa.priority_high(vec![i]),
-                    Priority::High => tsa.priority_low(vec![i]),
-                };
-                return Some(tsa);
-            }
+        if let Some(i) = self.state.selected()
+            && let Some(p) = self.priorities.get_mut(i)
+        {
+            let tsa = TorrentSetArgs::new();
+            let tsa = match p {
+                Priority::Low => tsa.priority_normal(vec![i]),
+                Priority::Normal => tsa.priority_high(vec![i]),
+                Priority::High => tsa.priority_low(vec![i]),
+            };
+            return Some(tsa);
         }
         None
     }
@@ -116,12 +116,8 @@ impl FilesTable {
                 self.select_last();
                 None
             }
-            KeyCode::Char(' ') => {
-                return self.toggle_wanted();
-            }
-            KeyCode::Char('p') => {
-                return self.cycle_priority();
-            }
+            KeyCode::Char(' ') => self.toggle_wanted(),
+            KeyCode::Char('p') => self.cycle_priority(),
             _ => None,
         }
     }
@@ -158,7 +154,7 @@ impl FilesTable {
                 ));
 
                 let name: Vec<&str> = file.name.split_terminator('/').collect();
-                let name = name.get(name.len() - 1).unwrap().to_string();
+                let name = name.last().unwrap().to_string();
 
                 let row = Row::new([
                     Cell::from(checkbox),
