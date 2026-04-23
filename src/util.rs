@@ -3,13 +3,43 @@ use ratatui::layout::Constraint;
 use ratatui::layout::Direction;
 use ratatui::layout::Layout;
 use ratatui::layout::Rect;
+use serde::Deserialize;
 use std::cmp::Ordering;
+use std::fs;
 use std::fs::DirEntry;
 use std::fs::read_dir;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::Mutex;
+use transmission_rpc::TransClient;
 use transmission_rpc::types::TorrentStatus;
+use url::Url;
+
+use crate::theme::Theme;
+
+#[derive(Deserialize)]
+struct Config {
+    rpc_url: String,
+}
+
+pub fn get_client() -> color_eyre::Result<Arc<Mutex<TransClient>>> {
+    let path = get_conf_dir().join("config.toml");
+    let content = fs::read_to_string(&path).expect("config.toml not found");
+    let config: Config = toml::from_str(&content)?;
+    let url = Url::parse(&config.rpc_url)?;
+
+    let client = Arc::new(Mutex::new(TransClient::new(url)));
+    Ok(client)
+}
+
+pub fn get_theme() -> Theme {
+    let path = get_conf_dir().join("theme.toml");
+    let path = path.to_str().unwrap();
+    let content = fs::read_to_string(path).expect("theme.toml not found");
+    toml::from_str(&content).expect("Invalid theme.toml")
+}
 
 pub fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {
     let p = path.as_ref();
