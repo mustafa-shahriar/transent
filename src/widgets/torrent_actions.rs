@@ -1,4 +1,4 @@
-use crate::theme::Theme;
+use crate::config::Theme;
 use ratatui::Frame;
 use ratatui::layout::Constraint;
 use ratatui::layout::Rect;

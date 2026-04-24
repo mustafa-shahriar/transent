@@ -10,7 +10,7 @@ use ratatui::widgets::Table;
 use ratatui::widgets::TableState;
 use transmission_rpc::types::Peer;
 
-use crate::theme::Theme;
+use crate::config::Theme;
 use crate::util::readble_speed;
 
 pub struct PeersTable {

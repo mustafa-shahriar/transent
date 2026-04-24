@@ -2,6 +2,19 @@ use ratatui::style::Color;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct Config {
+    pub rpc_config: RpcConfig,
+    pub theme: Theme,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct RpcConfig {
+    pub url: String,
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct Theme {
     pub general: General,
     pub tabs: Tabs,

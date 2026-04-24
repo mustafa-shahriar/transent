@@ -1,4 +1,4 @@
-use crate::theme::Theme;
+use crate::config::Theme;
 use crate::util::calculate_match_score;
 use crate::util::centered_rect;
 use crate::util::expand_path;

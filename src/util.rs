@@ -3,7 +3,6 @@ use ratatui::layout::Constraint;
 use ratatui::layout::Direction;
 use ratatui::layout::Layout;
 use ratatui::layout::Rect;
-use serde::Deserialize;
 use std::cmp::Ordering;
 use std::fs;
 use std::fs::DirEntry;
@@ -17,28 +16,27 @@ use transmission_rpc::TransClient;
 use transmission_rpc::types::TorrentStatus;
 use url::Url;
 
-use crate::theme::Theme;
+use crate::config::Config;
+use crate::config::RpcConfig;
 
-#[derive(Deserialize)]
-struct Config {
-    rpc_url: String,
-}
+pub fn get_client(rpc_config: &RpcConfig) -> color_eyre::Result<Arc<Mutex<TransClient>>> {
+    let mut url = Url::parse(&rpc_config.url)?;
 
-pub fn get_client() -> color_eyre::Result<Arc<Mutex<TransClient>>> {
-    let path = get_conf_dir().join("config.toml");
-    let content = fs::read_to_string(&path).expect("config.toml not found");
-    let config: Config = toml::from_str(&content)?;
-    let url = Url::parse(&config.rpc_url)?;
+    url.set_username(&rpc_config.username)
+        .map_err(|_| color_eyre::eyre::eyre!("invalid username"))?;
+
+    url.set_password(Some(&rpc_config.password))
+        .map_err(|_| color_eyre::eyre::eyre!("invalid password"))?;
 
     let client = Arc::new(Mutex::new(TransClient::new(url)));
     Ok(client)
 }
 
-pub fn get_theme() -> Theme {
-    let path = get_conf_dir().join("theme.toml");
+pub fn get_config() -> Config {
+    let path = get_conf_dir().join("config.toml");
     let path = path.to_str().unwrap();
-    let content = fs::read_to_string(path).expect("theme.toml not found");
-    toml::from_str(&content).expect("Invalid theme.toml")
+    let content = fs::read_to_string(path).expect("config.toml not found");
+    toml::from_str(&content).expect("Invalid config.toml")
 }
 
 pub fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {

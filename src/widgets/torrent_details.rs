@@ -11,7 +11,7 @@ use ratatui::widgets::Row;
 use ratatui::widgets::Table;
 use transmission_rpc::types::Torrent;
 
-use crate::theme::Theme;
+use crate::config::Theme;
 use crate::util::readabl_eta;
 use crate::util::readable_size;
 use crate::util::readble_speed;

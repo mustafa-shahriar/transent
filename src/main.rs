@@ -1,11 +1,11 @@
 mod app;
-mod theme;
+mod config;
 mod util;
 mod widgets;
 
 use crate::app::App;
 use crate::util::get_client;
-use crate::util::get_theme;
+use crate::util::get_config;
 
 use transmission_rpc::types::Torrent;
 
@@ -21,7 +21,8 @@ fn main() -> color_eyre::Result<()> {
 
 #[tokio::main]
 async fn tokio_main() -> color_eyre::Result<()> {
-    let client = get_client().unwrap();
+    let config = get_config();
+    let client = get_client(&config.rpc_config).unwrap();
     let torrents: Vec<Torrent> = vec![];
     let torrents_arc = Arc::new(Mutex::new(torrents));
 
@@ -44,7 +45,7 @@ async fn tokio_main() -> color_eyre::Result<()> {
         }
     });
 
-    let app = App::new(client, torrents_arc, get_theme());
+    let app = App::new(client, torrents_arc, config.theme);
 
     let terminal = ratatui::init();
     let result = app.run(terminal).await;

@@ -10,7 +10,7 @@ use ratatui::widgets::{Cell, Row, Table, TableState};
 use transmission_rpc::types::TorrentSetArgs;
 use transmission_rpc::types::{File, Priority};
 
-use crate::theme::Theme;
+use crate::config::Theme;
 use crate::util::readable_size;
 
 const BAR_WIDTH: usize = 20;

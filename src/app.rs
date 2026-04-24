@@ -1,4 +1,4 @@
-use crate::theme::Theme;
+use crate::config::Theme;
 use crate::widgets::custome_tab::CustomeTabs;
 use crate::widgets::delete_popup::DeletePopup;
 use crate::widgets::file_picker::FilePicker;

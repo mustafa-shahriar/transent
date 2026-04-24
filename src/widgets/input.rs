@@ -18,7 +18,7 @@ use ratatui::text::Text;
 use ratatui::widgets::Block;
 use ratatui::widgets::Paragraph;
 
-use crate::theme::Theme;
+use crate::config::Theme;
 
 /// App holds the state of the application
 pub struct Input {

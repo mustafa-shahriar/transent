@@ -15,7 +15,7 @@ use ratatui::widgets::Table;
 use ratatui::widgets::TableState;
 use transmission_rpc::types::Torrent;
 
-use crate::theme::Theme;
+use crate::config::Theme;
 use crate::util::readabl_eta;
 use crate::util::readble_speed;
 use crate::util::status_to_string;

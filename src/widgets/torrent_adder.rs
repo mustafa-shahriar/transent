@@ -1,5 +1,5 @@
 use crate::{
-    theme::Theme,
+    config::Theme,
     util::{centered_rect, readable_size},
 };
 use crossterm::event::{KeyCode, KeyEvent};

@@ -8,7 +8,7 @@ use ratatui::widgets::Clear;
 use ratatui::widgets::Paragraph;
 use transmission_rpc::types::Id;
 
-use crate::{theme::Theme, util::centered_rect};
+use crate::{config::Theme, util::centered_rect};
 
 pub struct DeletePopup {
     pub id: Id,

@@ -5,14 +5,16 @@ A terminal user interface (TUI) for managing torrents via Transmission, written 
 ## Features
 
 - View and navigate torrents
-- Switch tabs and focus areas
+- Keyboard-driven interface
+- Tab-based navigation
 - Configurable theme
+- Transmission RPC support
 
 ## Installation
 
 ### Requirements
 
-- Rust
+- Rust (latest stable recommended)
 - `transmission-daemon` running with RPC enabled
 
 ### Build
@@ -21,7 +23,7 @@ A terminal user interface (TUI) for managing torrents via Transmission, written 
 git clone https://github.com/mustafa-shahriar/transent
 cd transent
 cargo build --release
-````
+```
 
 ### Run
 
@@ -31,42 +33,50 @@ cargo build --release
 
 ## Configuration
 
-Place configuration files in:
-
+Configuration files should be placed in:
 
 ```
-~/.config/transent/
+~/.config/transent/config.toml
 ```
-### Theme (`config.toml`)
+
+### Example Configuration
 
 ```toml
-rpc_url = "transmission-daemon url with password"
+[rpc]
+url      = "http://127.0.0.1:9091/transmission/rpc"
+username = "your-username"
+password = "your-password"
 
-```
-
-### Theme (`theme.toml`)
-
-```toml
-[general]
+[theme.general]
 background = "#1a1b26"
 foreground = "#c0caf5"
 
-[tabs]
-active_fg = "#7aa2f7"
-active_bg = "#24283b"
+[theme.tabs]
+active_fg   = "#7aa2f7"
+active_bg   = "#24283b"
 inactive_fg = "#565f89"
 inactive_bg = "#1a1b26"
-highlight = "#f7768e"
+highlight   = "#f7768e"
 
-[table]
+[theme.table]
 row_highlight_fg = "#24283b"
 row_highlight_bg = "#7aa2f7"
 
-[progress_bar]
+[theme.progress_bar]
 filled = "#7aa2f7"
 empty  = "#24283b"
 ```
 
-## License
+## Notes
 
-MIT
+Make sure Transmission RPC is enabled in your `settings.json`:
+
+```json
+"rpc-enabled": true,
+"rpc-username": "your-username",
+"rpc-password": "your-password"
+```
+
+> **Note:** `rpc-username` and `rpc-password` must match your config.
+
+Default RPC endpoint: `http://127.0.0.1:9091/transmission/rpc`
