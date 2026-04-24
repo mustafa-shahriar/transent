@@ -478,11 +478,13 @@ impl App {
 
     async fn set_data_bottom_pane(&mut self) {
         if self.top_table.state.selected().is_none() {
+            self.clear_bottom_pane_data();
             return;
         };
 
         let selected_index = self.top_table.state.selected().unwrap();
         if selected_index >= self.top_table.torrents.len() {
+            self.clear_bottom_pane_data();
             return;
         }
 
@@ -501,6 +503,22 @@ impl App {
             }
             BottomTab::Details => {
                 self.bottom_pane.details_block.torrent = Some(sel_tor.clone());
+            }
+        }
+    }
+
+    fn clear_bottom_pane_data(&mut self) {
+        match self.bottom_tab.selected_tab().parse().unwrap() {
+            BottomTab::Files => {
+                self.bottom_pane.files_table.files.clear();
+                self.bottom_pane.files_table.priorities.clear();
+                self.bottom_pane.files_table.wanted.clear();
+            }
+            BottomTab::Peers => {
+                self.bottom_pane.peers_table.peers.clear();
+            }
+            BottomTab::Details => {
+                self.bottom_pane.details_block.torrent = None;
             }
         }
     }
