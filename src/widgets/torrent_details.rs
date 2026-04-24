@@ -5,6 +5,7 @@ use ratatui::style::Style;
 use ratatui::widgets::Block;
 use ratatui::widgets::Borders;
 use ratatui::widgets::Cell;
+use ratatui::widgets::Padding;
 use ratatui::widgets::Paragraph;
 use ratatui::widgets::Row;
 use ratatui::widgets::Table;
@@ -25,6 +26,16 @@ impl Details {
         Self { torrent: None }
     }
     pub fn render(&self, frame: &mut Frame, area: Rect, theme: &Theme) {
+        let base_style = Style::default()
+            .fg(Theme::color(&theme.general.foreground))
+            .bg(Theme::color(&theme.general.background));
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title("Torrent Details")
+            .border_style(base_style)
+            .padding(Padding::new(1, 1, 0, 0));
+
         match &self.torrent {
             Some(torrent) => {
                 let name = torrent.name.clone().unwrap_or_default();
@@ -39,10 +50,6 @@ impl Details {
                 let eta = readabl_eta(torrent.eta.unwrap_or(-1));
                 let peers = torrent.peers_connected.unwrap_or(0).to_string();
                 let seeds = torrent.peers_getting_from_us.unwrap_or(0).to_string();
-
-                let base_style = Style::default()
-                    .fg(Theme::color(&theme.general.foreground))
-                    .bg(Theme::color(&theme.general.background));
 
                 let alt_row_style = Style::default()
                     .bg(Theme::color(&theme.table.row_highlight_fg))
@@ -89,19 +96,12 @@ impl Details {
 
                 let widths = vec![Constraint::Percentage(25), Constraint::Percentage(75)];
 
-                let table = Table::new(rows, widths)
-                    .block(
-                        Block::default()
-                            .borders(Borders::ALL)
-                            .title("Torrent Details")
-                            .border_style(base_style),
-                    )
-                    .style(base_style);
+                let table = Table::new(rows, widths).block(block).style(base_style);
 
                 frame.render_widget(table, area);
             }
             None => {
-                let p = Paragraph::new("No torrent selected");
+                let p = Paragraph::new("No torrent selected").block(block);
                 frame.render_widget(p, area);
             }
         }

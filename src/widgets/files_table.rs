@@ -4,6 +4,8 @@ use ratatui::layout::Constraint;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Style, Stylize};
 use ratatui::text::{Line, Span};
+use ratatui::widgets::Block;
+use ratatui::widgets::Padding;
 use ratatui::widgets::{Cell, Row, Table, TableState};
 use transmission_rpc::types::TorrentSetArgs;
 use transmission_rpc::types::{File, Priority};
@@ -172,9 +174,11 @@ impl FilesTable {
             })
             .collect();
 
+        let block = Block::default().padding(Padding::new(1, 1, 0, 0));
         let table = Table::new(rows, WIDTHS)
             .header(header)
             .column_spacing(1)
+            .block(block)
             .style(Theme::color(&theme.general.foreground))
             .row_highlight_style(
                 Style::default()

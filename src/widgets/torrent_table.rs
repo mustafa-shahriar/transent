@@ -5,6 +5,8 @@ use ratatui::layout::Layout;
 use ratatui::layout::Rect;
 use ratatui::style::Style;
 use ratatui::style::Stylize;
+use ratatui::widgets::Block;
+use ratatui::widgets::Padding;
 use ratatui::widgets::Row;
 use ratatui::widgets::Scrollbar;
 use ratatui::widgets::ScrollbarOrientation;
@@ -83,9 +85,11 @@ impl TorrentTable {
             Constraint::Percentage(10),
         ];
 
+        let block = Block::default().padding(Padding::new(1, 1, 0, 0));
         let table = Table::new(rows, widths)
             .header(header)
             .column_spacing(2)
+            .block(block)
             .style(Theme::color(&theme.general.foreground))
             .row_highlight_style(
                 Style::default()
@@ -94,17 +98,9 @@ impl TorrentTable {
                     .add_modifier(ratatui::style::Modifier::BOLD),
             );
 
-        let scrollbar = Scrollbar::default()
-            .orientation(ScrollbarOrientation::VerticalRight)
-            .symbols(ratatui::symbols::scrollbar::VERTICAL)
-            .begin_symbol(Some(""))
-            .end_symbol(Some(""))
-            .thumb_style(
-                Style::default()
-                    .fg(Theme::color(&theme.general.foreground))
-                    .bg(Theme::color(&theme.general.background))
-                    .add_modifier(ratatui::style::Modifier::BOLD),
-            );
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(Some("▲"))
+            .end_symbol(Some("▼"));
 
         frame.render_stateful_widget(table, container[0], &mut self.state);
         frame.render_stateful_widget(scrollbar, container[1], &mut self.scrollbar_state);
