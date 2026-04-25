@@ -2,11 +2,15 @@ mod app;
 mod config;
 mod util;
 mod widgets;
-
 use crate::app::App;
 use crate::util::get_client;
 use crate::util::get_config;
 
+use crossterm::ExecutableCommand;
+use crossterm::event::DisableBracketedPaste;
+use crossterm::event::EnableBracketedPaste;
+use crossterm::event::KeyboardEnhancementFlags;
+use crossterm::event::PushKeyboardEnhancementFlags;
 use transmission_rpc::types::Torrent;
 
 use std::sync::Arc;
@@ -46,9 +50,20 @@ async fn tokio_main() -> color_eyre::Result<()> {
     });
 
     let app = App::new(client, torrents_arc, config.theme);
+    let mut terminal = ratatui::init();
 
-    let terminal = ratatui::init();
+    terminal.clear()?;
+    std::io::stdout().execute(EnableBracketedPaste)?;
+    if cfg!(not(windows)) {
+        std::io::stdout().execute(PushKeyboardEnhancementFlags(
+            KeyboardEnhancementFlags::DISAMBIGUATE_ESCAPE_CODES,
+        ))?;
+    }
+
     let result = app.run(terminal).await;
+
+    std::io::stdout().execute(DisableBracketedPaste)?;
     ratatui::restore();
+
     result
 }

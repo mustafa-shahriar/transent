@@ -234,6 +234,7 @@ impl App {
     async fn handle_crossterm_events(&mut self) -> Result<()> {
         if event::poll(Duration::from_millis(100))? {
             match event::read()? {
+                Event::Paste(_) => {}
                 Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key).await,
                 Event::Mouse(_) => {}
                 Event::Resize(_, _) => {}
