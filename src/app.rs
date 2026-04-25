@@ -329,11 +329,11 @@ impl App {
 
         let action = if let Some(PopUp::TorrentAction(a)) = self.popup.as_mut() {
             match key.code {
-                KeyCode::Char('j') => {
+                KeyCode::Char('j') | KeyCode::Down => {
                     a.select_next();
                     return;
                 }
-                KeyCode::Char('k') => {
+                KeyCode::Char('k') | KeyCode::Up => {
                     a.select_prev();
                     return;
                 }
@@ -427,16 +427,16 @@ impl App {
                 let id = t.id().unwrap();
                 self.resume(id).await;
             }
-            (KeyCode::Char('j'), _) => {
+            (KeyCode::Char('j'), _) | (KeyCode::Down, _) => {
                 self.top_table.select_next();
             }
-            (KeyCode::Char('k'), _) => {
+            (KeyCode::Char('k'), _) | (KeyCode::Up, _) => {
                 self.top_table.select_prev();
             }
-            (KeyCode::Char('l'), _) => {
+            (KeyCode::Char('l'), _) | (KeyCode::Right, _) => {
                 self.top_tab.select_next();
             }
-            (KeyCode::Char('h'), _) => {
+            (KeyCode::Char('h'), _) | (KeyCode::Left, _) => {
                 self.top_tab.select_prev();
             }
             _ => {}
@@ -451,11 +451,11 @@ impl App {
                 self.top_tab.is_focused = true;
                 return;
             }
-            (KeyCode::Char('l'), _) => {
+            (KeyCode::Char('l'), _) | (KeyCode::Right, _) => {
                 self.bottom_tab.select_next();
                 return;
             }
-            (KeyCode::Char('h'), _) => {
+            (KeyCode::Char('h'), _) | (KeyCode::Left, _) => {
                 self.bottom_tab.select_prev();
                 return;
             }

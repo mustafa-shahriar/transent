@@ -155,7 +155,6 @@ impl Input {
                     self.move_cursor_right();
                 }
                 KeyCode::Char('p') => {
-                    //BUG: pasting not working in Normal mode
                     self.paste_from_clipboard();
                 }
                 KeyCode::Char('q') | KeyCode::Esc => {
@@ -200,7 +199,7 @@ impl Input {
         if let Ok(mut clipboard) = Clipboard::new()
             && let Ok(text) = clipboard.get_text()
         {
-            let sanitized: String = text.chars().filter(|c| !c.is_whitespace()).collect();
+            let sanitized: String = text.chars().filter(|c| *c != '\n' && *c != '\r').collect();
             for c in sanitized.chars() {
                 self.enter_char(c);
             }
