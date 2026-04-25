@@ -197,12 +197,12 @@ impl Input {
     }
 
     fn paste_from_clipboard(&mut self) {
-        if let Ok(mut clipboard) = Clipboard::new() {
-            if let Ok(text) = clipboard.get_text() {
-                let sanitized: String = text.chars().filter(|c| *c != '\n' && *c != '\r').collect();
-                for c in sanitized.chars() {
-                    self.enter_char(c);
-                }
+        if let Ok(mut clipboard) = Clipboard::new()
+            && let Ok(text) = clipboard.get_text()
+        {
+            let sanitized: String = text.chars().filter(|c| !c.is_whitespace()).collect();
+            for c in sanitized.chars() {
+                self.enter_char(c);
             }
         }
     }
@@ -228,11 +228,10 @@ impl Input {
                 " to exit.".into(),
             ],
             InputMode::Editing => vec![
-                "Press ".into(),
-                "Esc".bold(),
-                " to stop editing, ".into(),
                 "Enter".bold(),
-                " to record the message".into(),
+                " to record the message,".into(),
+                " ctrl+shift+v".bold(),
+                " to paste".into(),
             ],
         };
 
@@ -241,7 +240,7 @@ impl Input {
         frame.render_widget(help_message, layout[0]);
 
         // Inner width = total width minus 2 border chars, reserve 2 spaces for cursor room
-        let inner_width = layout[1].width.saturating_sub(2) as usize;
+        let inner_width = layout[1].width as usize;
         let cursor_reserved: usize = 2;
         let visible_width = inner_width.saturating_sub(cursor_reserved);
 

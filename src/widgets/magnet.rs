@@ -36,9 +36,11 @@ impl Magnet {
 
     pub fn handler(&mut self, key: KeyEvent) -> (bool, Option<TorrentAddArgs>) {
         let arg = if let Some(s) = self.input.handler(key) {
-            let mut arg = TorrentAddArgs::default();
-            arg.filename = Some(s);
-            arg.files_unwanted = None;
+            let arg = TorrentAddArgs {
+                filename: Some(s),
+                files_unwanted: None,
+                ..Default::default()
+            };
             Some(arg)
         } else {
             None
