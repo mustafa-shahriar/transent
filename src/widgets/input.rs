@@ -148,10 +148,10 @@ impl Input {
                     self.move_cursor_right();
                     self.input_mode = InputMode::Editing;
                 }
-                KeyCode::Char('h') => {
+                KeyCode::Char('h') | KeyCode::Left => {
                     self.move_cursor_left();
                 }
-                KeyCode::Char('l') => {
+                KeyCode::Char('l') | KeyCode::Right => {
                     self.move_cursor_right();
                 }
                 KeyCode::Char('p') => {
