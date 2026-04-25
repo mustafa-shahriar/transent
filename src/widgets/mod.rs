@@ -3,6 +3,7 @@ pub mod delete_popup;
 pub mod file_picker;
 pub mod files_table;
 pub mod input;
+pub mod magnet;
 pub mod peers_table;
 pub mod torrent_actions;
 pub mod torrent_adder;

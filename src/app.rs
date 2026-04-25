@@ -3,6 +3,7 @@ use crate::widgets::custome_tab::CustomeTabs;
 use crate::widgets::delete_popup::DeletePopup;
 use crate::widgets::file_picker::FilePicker;
 use crate::widgets::files_table::FilesTable;
+use crate::widgets::magnet::Magnet;
 use crate::widgets::peers_table::PeersTable;
 use crate::widgets::torrent_actions::TorrentActions;
 use crate::widgets::torrent_adder::TorrentAdder;
@@ -111,6 +112,7 @@ pub enum PopUp {
     DeleteConfirmation(DeletePopup),
     FilePicker,
     TorrentAdder(TorrentAdder),
+    AddMagnet(Magnet),
 }
 
 pub struct BottomPane {
@@ -225,6 +227,7 @@ impl App {
             PopUp::DeleteConfirmation(dc) => dc.render(frame, &self.theme),
             PopUp::FilePicker => self.file_picker.render(frame, &self.theme),
             PopUp::TorrentAdder(ta) => ta.render(frame, &self.theme),
+            PopUp::AddMagnet(am) => am.render(frame, &self.theme),
         }
     }
 
@@ -247,6 +250,7 @@ impl App {
                 PopUp::TorrentAction(_) => self.handle_actions_menu(key).await,
                 PopUp::FilePicker => self.handle_filepicker(key).await,
                 PopUp::TorrentAdder(_) => self.handle_torrent_adder(key).await,
+                PopUp::AddMagnet(_) => self.handle_magnet_adder(key).await,
             }
             return;
         }
@@ -258,6 +262,10 @@ impl App {
             self.popup = Some(PopUp::FilePicker);
             return;
         }
+        if key.code == KeyCode::Char('m') {
+            self.popup = Some(PopUp::AddMagnet(Magnet::new()));
+            return;
+        }
         match self.active_pane {
             Pane::Top => self.handle_top_pane(key).await,
             Pane::Bottom => self.handle_bottom_pane(key).await,
@@ -267,6 +275,23 @@ impl App {
     async fn handle_torrent_adder(&mut self, key: KeyEvent) {
         if let Some(PopUp::TorrentAdder(ta)) = self.popup.as_mut() {
             let (close, torrent) = ta.handler(key);
+
+            if let Some(torrent) = torrent
+                && let Err(e) = self.client.lock().await.torrent_add(torrent).await
+            {
+                eprintln!("Failed to add torrent: {:?}", e);
+                std::process::exit(1);
+            }
+
+            if close {
+                self.popup = None;
+            }
+        }
+    }
+
+    async fn handle_magnet_adder(&mut self, key: KeyEvent) {
+        if let Some(PopUp::AddMagnet(am)) = self.popup.as_mut() {
+            let (close, torrent) = am.handler(key);
 
             if let Some(torrent) = torrent
                 && let Err(e) = self.client.lock().await.torrent_add(torrent).await
