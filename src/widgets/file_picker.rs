@@ -10,6 +10,7 @@ use crate::widgets::input::InputMode;
 
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
+use crossterm::event::KeyModifiers;
 use ratatui::Frame;
 use ratatui::layout::Alignment;
 use ratatui::layout::Constraint;
@@ -166,7 +167,10 @@ impl FilePicker {
                 self.input.input_mode = InputMode::Editing;
                 self.input.reset_cursor();
             }
-            KeyCode::Char('q') | KeyCode::Esc => return (true, None),
+            KeyCode::Char('q') => return (true, None),
+            KeyCode::Char('[') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                return (true, None);
+            }
             _ => {}
         }
         (false, None)

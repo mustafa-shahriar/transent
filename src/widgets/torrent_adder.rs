@@ -2,7 +2,7 @@ use crate::{
     config::Theme,
     util::{centered_rect, readable_size},
 };
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use lava_torrent::torrent::v1::Torrent;
 use ratatui::{
     Frame,
@@ -113,7 +113,10 @@ impl TorrentAdder {
 
                 (true, Some(t))
             }
-            KeyCode::Esc | KeyCode::Char('q') => (true, None),
+            KeyCode::Char('q') => (true, None),
+            KeyCode::Char('[') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                return (true, None);
+            }
             _ => (false, None),
         }
     }

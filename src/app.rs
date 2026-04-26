@@ -308,22 +308,28 @@ impl App {
     }
 
     async fn handle_popup_delete(&mut self, key: KeyEvent) {
-        match key.code {
-            KeyCode::Char('y') | KeyCode::Char('Y') => {
+        match (key.code, key.modifiers) {
+            (KeyCode::Char('y'), _) | (KeyCode::Char('Y'), _) => {
                 if let PopUp::DeleteConfirmation(p) = self.popup.as_ref().unwrap() {
                     self.delete_torrent(p.id.clone(), p.with_data).await;
                     self.popup = None;
                 }
             }
-            KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Char('q') | KeyCode::Esc => {
+            (KeyCode::Char('n'), _) | (KeyCode::Char('N'), _) | (KeyCode::Char('q'), _) => {
                 self.popup = None
             }
+            (KeyCode::Char('['), m) if m.contains(KeyModifiers::CONTROL) => self.popup = None,
             _ => {}
         }
     }
 
     async fn handle_actions_menu(&mut self, key: KeyEvent) {
-        if matches!(key.code, KeyCode::Char('q') | KeyCode::Esc) {
+        if matches!(key.code, KeyCode::Char('q')) {
+            self.popup = None;
+            return;
+        }
+        if matches!((key.code, key.modifiers), (KeyCode::Char('['), m) if m.contains(KeyModifiers::CONTROL))
+        {
             self.popup = None;
             return;
         }
