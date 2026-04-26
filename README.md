@@ -42,7 +42,7 @@ Configuration files should be placed in:
 ### Example Configuration
 
 ```toml
-[rpc]
+[rpc_config]
 url      = "http://127.0.0.1:9091/transmission/rpc"
 username = "your-username"
 password = "your-password"
