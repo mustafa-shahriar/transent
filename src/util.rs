@@ -203,12 +203,15 @@ pub fn readable_size(size: u64) -> String {
 pub fn readable_time(sec: i64) -> String {
     let duration = Duration::from_secs(sec as u64);
     let secs = duration.as_secs();
-    let hours = secs / 3600;
-    let minutes = (secs % 3600) / 60;
     let seconds = secs % 60;
+    let minutes = (secs % 3600) / 60;
+    let hours = secs / 3600;
+    let days = secs / 86400;
 
-    if hours >= 1 {
-        format!("{}h{}m", hours, minutes)
+    if days >= 1 {
+        format!("{}d{}h{}m", days, hours, minutes)
+    } else if hours >= 1 {
+        format!("{}h{}m{}s", hours, minutes, seconds)
     } else if minutes >= 1 {
         format!("{}m{}s", minutes, seconds)
     } else {
