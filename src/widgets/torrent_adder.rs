@@ -114,9 +114,7 @@ impl TorrentAdder {
                 (true, Some(t))
             }
             KeyCode::Char('q') => (true, None),
-            KeyCode::Char('[') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                return (true, None);
-            }
+            KeyCode::Char('[') if key.modifiers.contains(KeyModifiers::CONTROL) => (true, None),
             _ => (false, None),
         }
     }
