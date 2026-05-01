@@ -167,7 +167,7 @@ impl FilePicker {
                 self.input.input_mode = InputMode::Editing;
                 self.input.reset_cursor();
             }
-            KeyCode::Char('q') => return (true, None),
+            KeyCode::Char('q') | KeyCode::Esc => return (true, None),
             KeyCode::Char('[') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 return (true, None);
             }

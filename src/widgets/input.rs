@@ -157,7 +157,7 @@ impl Input {
                 KeyCode::Char('p') => {
                     self.paste_from_clipboard();
                 }
-                KeyCode::Char('q') => {
+                KeyCode::Char('q') | KeyCode::Esc => {
                     self.is_active = false;
                     self.input = "".to_string();
                 }
@@ -187,6 +187,9 @@ impl Input {
                 }
                 KeyCode::Char('v') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                     self.paste_from_clipboard();
+                }
+                KeyCode::Char('[') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    self.input_mode = InputMode::Normal;
                 }
                 KeyCode::Char(to_insert) => self.enter_char(to_insert),
                 KeyCode::Backspace => self.delete_char(),

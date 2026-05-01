@@ -324,7 +324,7 @@ impl App {
     }
 
     async fn handle_actions_menu(&mut self, key: KeyEvent) {
-        if matches!(key.code, KeyCode::Char('q')) {
+        if matches!(key.code, KeyCode::Char('q') | KeyCode::Esc) {
             self.popup = None;
             return;
         }
