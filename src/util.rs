@@ -205,7 +205,7 @@ pub fn readable_time(sec: i64) -> String {
     let secs = duration.as_secs();
     let seconds = secs % 60;
     let minutes = (secs % 3600) / 60;
-    let hours = secs / 3600;
+    let hours = (secs % 86400) / 3600;
     let days = secs / 86400;
 
     if days >= 1 {
