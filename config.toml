@@ -21,3 +21,10 @@ row_highlight_bg = "#7aa2f7"
 [theme.progress_bar]
 filled = "#7aa2f7"
 empty  = "#24283b"
+
+[theme.details]
+card_bg      = "#24283b"
+muted_fg     = "#565f89"
+accent_fg    = "#7aa2f7"
+success_fg   = "#9ece6a"
+border_color = "#414868"

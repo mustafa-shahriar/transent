@@ -20,6 +20,7 @@ pub struct Theme {
     pub tabs: Tabs,
     pub table: TableTheme,
     pub progress_bar: ProgressBar,
+    pub details: Details,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -48,9 +49,17 @@ pub struct ProgressBar {
     pub empty: String,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct Details {
+    pub card_bg: String,
+    pub muted_fg: String,
+    pub accent_fg: String,
+    pub success_fg: String,
+    pub border_color: String,
+}
+
 impl Theme {
     pub fn color(s: &str) -> Color {
-        // Accepts "#RRGGBB" or "0xRRGGBB"
         let s = s.trim_start_matches('#').trim_start_matches("0x");
         if let Ok(rgb) = u32::from_str_radix(s, 16) {
             Color::Rgb(
