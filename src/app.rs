@@ -24,6 +24,8 @@ use ratatui::layout::Constraint::Length;
 use ratatui::layout::Constraint::Percentage;
 use ratatui::layout::Direction;
 use ratatui::layout::Layout;
+use ratatui::style::Style;
+use ratatui::widgets::Block;
 use ratatui::widgets::ScrollbarState;
 use ratatui::widgets::TableState;
 use std::fmt;
@@ -184,7 +186,14 @@ impl App {
         while self.running {
             self.filter_torrents().await;
             self.set_data_bottom_pane().await;
-            terminal.draw(|frame| self.render(frame))?;
+            terminal.draw(|frame| {
+                frame.render_widget(
+                    Block::default()
+                        .style(Style::default().bg(Theme::color(&self.theme.general.background))),
+                    frame.area(),
+                );
+                self.render(frame);
+            })?;
             self.handle_crossterm_events().await?;
         }
         Ok(())

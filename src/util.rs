@@ -4,7 +4,6 @@ use ratatui::layout::Direction;
 use ratatui::layout::Layout;
 use ratatui::layout::Rect;
 use std::cmp::Ordering;
-use std::fs;
 use std::fs::DirEntry;
 use std::fs::read_dir;
 use std::path::Path;
@@ -16,7 +15,6 @@ use transmission_rpc::TransClient;
 use transmission_rpc::types::TorrentStatus;
 use url::Url;
 
-use crate::config::Config;
 use crate::config::RpcConfig;
 
 pub fn get_client(rpc_config: &RpcConfig) -> color_eyre::Result<Arc<Mutex<TransClient>>> {
@@ -30,13 +28,6 @@ pub fn get_client(rpc_config: &RpcConfig) -> color_eyre::Result<Arc<Mutex<TransC
 
     let client = Arc::new(Mutex::new(TransClient::new(url)));
     Ok(client)
-}
-
-pub fn get_config() -> Config {
-    let path = get_conf_dir().join("config.toml");
-    let path = path.to_str().unwrap();
-    let content = fs::read_to_string(path).expect("config.toml not found");
-    toml::from_str(&content).expect("Invalid config.toml")
 }
 
 pub fn expand_path<P: AsRef<Path>>(path: P) -> PathBuf {

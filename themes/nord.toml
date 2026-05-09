@@ -1,0 +1,25 @@
+[general]
+background = "#2e3440"
+foreground = "#d8dee9"
+
+[tabs]
+active_fg   = "#88c0d0"
+active_bg   = "#3b4252"
+inactive_fg = "#4c566a"
+inactive_bg = "#2e3440"
+highlight   = "#bf616a"
+
+[table]
+row_highlight_fg = "#3b4252"
+row_highlight_bg = "#88c0d0"
+
+[progress_bar]
+filled = "#88c0d0"
+empty  = "#3b4252"
+
+[details]
+card_bg      = "#2e3440"
+muted_fg     = "#4c566a"
+accent_fg    = "#d8dee9"
+success_fg   = "#88c0d0"
+border_color = "#434c5e"

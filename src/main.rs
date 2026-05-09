@@ -3,8 +3,8 @@ mod config;
 mod util;
 mod widgets;
 use crate::app::App;
+use crate::config::get_config;
 use crate::util::get_client;
-use crate::util::get_config;
 
 use crossterm::ExecutableCommand;
 use crossterm::event::DisableBracketedPaste;

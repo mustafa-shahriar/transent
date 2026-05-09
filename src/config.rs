@@ -1,10 +1,22 @@
+use std::fs;
+
 use ratatui::style::Color;
 use serde::Deserialize;
+
+use crate::util::get_conf_dir;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
     pub rpc_config: RpcConfig,
     pub theme: Theme,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+struct RawConfig {
+    pub url: String,
+    pub username: String,
+    pub password: String,
+    pub theme: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -70,5 +82,31 @@ impl Theme {
         } else {
             Color::White
         }
+    }
+}
+
+fn resolve_theme(name: &str) -> Theme {
+    let toml_str = match name {
+        "catppuccin_mocha" => include_str!("../themes/catppuccin_mocha.toml"),
+        "dracula" => include_str!("../themes/dracula.toml"),
+        "gruvbox_dark" => include_str!("../themes/gruvbox_dark.toml"),
+        "nord" => include_str!("../themes/nord.toml"),
+        "rose_pine" => include_str!("../themes/rose_pine.toml"),
+        _ => include_str!("../themes/tokyonight.toml"),
+    };
+    toml::from_str(toml_str).expect("Invalid theme file")
+}
+
+pub fn get_config() -> Config {
+    let path = get_conf_dir().join("config.toml");
+    let content = fs::read_to_string(&path).expect("config.toml not found");
+    let raw: RawConfig = toml::from_str(&content).expect("Invalid config.toml");
+    Config {
+        rpc_config: RpcConfig {
+            url: raw.url,
+            username: raw.username,
+            password: raw.password,
+        },
+        theme: resolve_theme(&raw.theme),
     }
 }
