@@ -129,6 +129,9 @@ impl FilesTable {
     pub fn render(&mut self, frame: &mut Frame, area: Rect, theme: &Theme) {
         let header =
             Row::new(["  ", "Name", "Size", "Progress", "Priority"]).style(Style::new().bold());
+        let selected_bg = Theme::color(&theme.table.row_highlight_bg);
+        let selected_fg = Theme::color(&theme.table.row_highlight_fg);
+        let selected = self.state.selected();
 
         let rows: Vec<Row> = self
             .files
@@ -158,13 +161,22 @@ impl FilesTable {
                 let name: Vec<&str> = file.name.split_terminator('/').collect();
                 let name = name.last().unwrap().to_string();
 
-                let row = Row::new([
-                    Cell::from(checkbox),
-                    Cell::from(name),
-                    Cell::from(size),
-                    progress_cell,
-                    Cell::from(priority),
-                ]);
+                let row = match selected {
+                    Some(n) if n == i => Row::new([
+                        Cell::from(checkbox).bg(selected_bg).fg(selected_fg),
+                        Cell::from(name).bg(selected_bg).fg(selected_fg),
+                        Cell::from(size).bg(selected_bg).fg(selected_fg),
+                        progress_cell,
+                        Cell::from(priority).bg(selected_bg).fg(selected_fg),
+                    ]),
+                    _ => Row::new([
+                        Cell::from(checkbox),
+                        Cell::from(name),
+                        Cell::from(size),
+                        progress_cell,
+                        Cell::from(priority),
+                    ]),
+                };
 
                 if wanted {
                     row
@@ -177,15 +189,9 @@ impl FilesTable {
         let block = Block::default().padding(Padding::new(1, 1, 0, 0));
         let table = Table::new(rows, WIDTHS)
             .header(header)
-            .column_spacing(1)
+            .column_spacing(0)
             .block(block)
-            .style(Theme::color(&theme.general.foreground))
-            .row_highlight_style(
-                Style::default()
-                    .fg(Theme::color(&theme.table.row_highlight_fg))
-                    .bg(Theme::color(&theme.table.row_highlight_bg))
-                    .add_modifier(ratatui::style::Modifier::BOLD),
-            );
+            .style(Theme::color(&theme.general.foreground));
 
         frame.render_stateful_widget(table, area, &mut self.state);
     }
