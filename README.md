@@ -1,5 +1,5 @@
 # transmission-tui
-
+<img width="1469" height="806" alt="transent_demo" src="https://github.com/user-attachments/assets/fd1e5a9d-5564-4db9-b3e2-fe1e33cc5b88" />
 A terminal user interface (TUI) for managing torrents via Transmission, written in Rust using [ratatui](https://github.com/ratatui-org/ratatui).
 
 ## Features
