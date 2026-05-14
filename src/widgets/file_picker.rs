@@ -158,8 +158,8 @@ impl FilePicker {
         match key.code {
             KeyCode::Char('j') | KeyCode::Down => self.select_next(),
             KeyCode::Char('k') | KeyCode::Up => self.select_prev(),
-            KeyCode::Char('h') | KeyCode::Right => self.go_back(),
-            KeyCode::Char('l') | KeyCode::Enter | KeyCode::Left => {
+            KeyCode::Char('h') | KeyCode::Left => self.go_back(),
+            KeyCode::Char('l') | KeyCode::Enter | KeyCode::Right => {
                 return self.select_entry().await;
             }
             KeyCode::Char('/') => {
