@@ -8,8 +8,7 @@ A terminal user interface (TUI) for managing torrents via Transmission, written 
 - View and navigate torrents
 - Keyboard-driven interface
 - Tab-based navigation
-- Configurable theme
-- Transmission RPC support
+- 5 themes
 
 ## Installation
 
