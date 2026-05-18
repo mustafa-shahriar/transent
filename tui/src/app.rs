@@ -386,8 +386,8 @@ impl App {
     }
 
     async fn handle_top_pane(&mut self, key: KeyEvent) {
-        match (key.code, key.modifiers) {
-            (KeyCode::Char('j'), m) if m.contains(KeyModifiers::CONTROL) => {
+        match (key.code, key.modifiers.contains(KeyModifiers::CONTROL)) {
+            (KeyCode::Char('j'), true) => {
                 self.active_pane = Pane::Bottom;
                 self.top_tab.is_focused = false;
                 self.bottom_tab.is_focused = true;
@@ -460,8 +460,8 @@ impl App {
     }
 
     async fn handle_bottom_pane(&mut self, key: KeyEvent) {
-        match (key.code, key.modifiers) {
-            (KeyCode::Char('k'), m) if m.contains(KeyModifiers::CONTROL) => {
+        match (key.code, key.modifiers.contains(KeyModifiers::CONTROL)) {
+            (KeyCode::Char('k'), true) => {
                 self.active_pane = Pane::Top;
                 self.bottom_tab.is_focused = false;
                 self.top_tab.is_focused = true;
@@ -578,3 +578,4 @@ impl App {
         let _ = client.torrent_remove(vec![id], with_data).await;
     }
 }
+

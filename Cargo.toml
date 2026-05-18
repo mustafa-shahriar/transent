@@ -1,25 +1,37 @@
-[package]
-name = "transent"
-version = "0.1.0"
-description = "transmission terminal ui"
-authors = ["mustafa-shahriar <mostafashahriar598@gmail.com>"]
-license = "MIT"
-edition = "2024"
+[workspace]
+members = [
+    "tui",
+    "client-core",
+    "client-transmission",
+    "client-qbittorrent",
+]
 
-[dependencies]
-crossterm = "0.28.1"
-ratatui = "0.29.0"
-color-eyre = "0.6.3"
-transmission-rpc = "0.5.0"
-url = "2.5.4"
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["mustafa-shahriar <email>"]
+
+[workspace.dependencies]
 tokio = { version = "1.45.1", features = ["full"] }
-toml = "0.8.23"
-serde = "1.0.219"
+serde = "1.0.228"
+serde_json = "1.0.149"
+anyhow = "1"
+async-trait = "0.1.88"
+reqwest = { version = "0.13.3", features = ["json", "form", "cookies"]} 
+thiserror = "2.0"
+url = "2.5.4"
+toml = "0.9"
+ratatui = "0.29"
+crossterm = "0.28.1" # 0.29 doesn't work(crtl+j and ctrl+k doesn't work)
+color-eyre = "0.6"
 derive_setters = "0.1.7"
 home = "0.5.11"
 dirs = "6.0.0"
 lava_torrent = "0.11.1"
-[target.'cfg(target_os = "linux")'.dependencies]
+transmission-rpc = "0.5"
 arboard = { version = "3.6.1", features = [
     "wayland-data-control",
     "wl-clipboard-rs"

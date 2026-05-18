@@ -49,4 +49,3 @@ impl Magnet {
         (!self.input.is_active, arg)
     }
 }
-

@@ -87,12 +87,14 @@ impl Theme {
 
 fn resolve_theme(name: &str) -> Theme {
     let toml_str = match name {
-        "catppuccin_mocha" => include_str!("../themes/catppuccin_mocha.toml"),
-        "dracula" => include_str!("../themes/dracula.toml"),
-        "gruvbox_dark" => include_str!("../themes/gruvbox_dark.toml"),
-        "nord" => include_str!("../themes/nord.toml"),
-        "rose_pine" => include_str!("../themes/rose_pine.toml"),
-        _ => include_str!("../themes/tokyonight.toml"),
+        "catppuccin_mocha" => include_str!("../../themes/catppuccin_mocha.toml"),
+        "dracula" => include_str!("../../themes/dracula.toml"),
+        "gruvbox_dark" => include_str!("../../themes/gruvbox_dark.toml"),
+        "nord" => include_str!("../../themes/nord.toml"),
+        "rose_pine" => include_str!("../../themes/rose_pine.toml"),
+        "github" => include_str!("../../themes/github.toml"),
+        "github_dark" => include_str!("../../themes/github_dark.toml"),
+        _ => include_str!("../../themes/tokyonight.toml"),
     };
     toml::from_str(toml_str).expect("Invalid theme file")
 }

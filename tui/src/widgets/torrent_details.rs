@@ -46,7 +46,7 @@ impl Details {
 
         let name = torrent.name.clone().unwrap_or_default();
         let total_size_bytes = torrent.total_size.unwrap_or(0) as u64;
-        let downloaded_bytes = torrent.downloaded_ever.unwrap_or(0) as u64;
+        let downloaded_bytes = torrent.downloaded_ever.unwrap_or(0);
         let total_size = readable_size(total_size_bytes);
         let downloaded = readable_size(downloaded_bytes);
         let uploaded = readable_size(torrent.uploaded_ever.unwrap_or(0) as u64);

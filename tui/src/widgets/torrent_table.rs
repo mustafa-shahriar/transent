@@ -102,6 +102,10 @@ impl TorrentTable {
             .begin_symbol(Some("▲"))
             .end_symbol(Some("▼"));
 
+        let content_length = self.torrents.len().saturating_sub(1);
+        let position = self.state.selected().unwrap_or(0).min(content_length);
+        self.scrollbar_state = ScrollbarState::new(content_length).position(position);
+
         frame.render_stateful_widget(table, container[0], &mut self.state);
         frame.render_stateful_widget(scrollbar, container[1], &mut self.scrollbar_state);
     }
